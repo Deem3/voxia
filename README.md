@@ -102,8 +102,8 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 ### Release flow
 
 1. Merge conventional commits to `main`.
-2. Merge the **release-please** Release PR when ready to ship.
-3. GitHub Actions **`Release`** workflow builds macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage`), then uploads them to the GitHub Release (plus `latest.json` for the updater).
+2. Merge the **release-please** Release PR when ready to ship (creates git tag `voxia-vX.Y.Z` only — no GitHub Release yet).
+3. Tag push starts **`Release`**, which builds macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage`), creates the GitHub Release, and uploads assets (plus `latest.json` for the updater).
 4. Users: **Settings → Updates → Check for updates** (production builds only).
 
 **Only see “Source code (zip)” on the release?** GitHub always adds those automatically. Installers appear only after the **`Release`** workflow succeeds.
@@ -111,6 +111,13 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 - **Cause:** Releases created with the default `GITHUB_TOKEN` do **not** start other workflows. Configure `RELEASE_PLEASE_TOKEN` (PAT) for release-please (see step 5 above), _or_ run **Actions → Release → Run workflow** from branch **`main`**, and enter the tag exactly as on GitHub (e.g. `voxia-v0.2.0`, not `v0.2.0`).
 - **Also required:** secret `TAURI_SIGNING_PRIVATE_KEY` (see step 1).
 - Check **Actions → Release** for failed macOS / Windows / Linux jobs.
+
+**`Cannot upload assets to an immutable release`:** release-please used to publish an empty GitHub Release first; re-uploading installers then fails. Fix for an existing tag:
+
+1. GitHub → **Releases** → open the release → **Delete release** (keep the git tag).
+2. **Actions → Release → Run workflow** from **`main`**, tag = e.g. `voxia-v0.2.2`.
+
+Future releases use `skip-github-release: true` in release-please config so only **Release** creates the GitHub Release.
 
 Private repositories: the default `latest.json` URL requires a **public** release asset URL; use a custom endpoint or proxy if the repo is private.
 

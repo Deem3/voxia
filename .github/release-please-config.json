@@ -4,6 +4,7 @@
     ".": {
       "release-type": "node",
       "component": "voxia",
+      "skip-github-release": true,
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {
