@@ -22,6 +22,7 @@ concurrency:
 
 jobs:
   verify-versions:
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       # Tags like voxia-v0.2.0 are not branches — checkout needs refs/tags/... (not refs/heads/...).
@@ -32,6 +33,7 @@ jobs:
       - run: chmod +x scripts/verify-versions.sh && ./scripts/verify-versions.sh
 
   build-tauri:
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     needs: verify-versions
     permissions:
       contents: write
