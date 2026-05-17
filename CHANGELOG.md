@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Deem3/voxia/compare/voxia-v0.2.0...voxia-v0.2.1) (2026-05-17)
+
+
+### Bug Fixes
+
+* align toml version ([3032b01](https://github.com/Deem3/voxia/commit/3032b019b528fc3fa9404c7f8d419d091ea27525))
+
 ## [0.2.0](https://github.com/Deem3/voxia/compare/voxia-v0.1.0...voxia-v0.2.0) (2026-05-17)
 
 
