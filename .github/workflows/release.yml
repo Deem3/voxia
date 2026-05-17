@@ -5,15 +5,14 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - "voxia-v*"
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to build and upload (e.g. v0.2.0)"
+        description: "Release tag (e.g. voxia-v0.2.0 — must match GitHub tag exactly)"
         required: true
-
 permissions:
   contents: write
 
@@ -25,7 +24,7 @@ jobs:
   verify-versions:
     runs-on: ubuntu-latest
     steps:
-      # v0.2.0 is a tag, not a branch — checkout needs refs/tags/... (not refs/heads/...).
+      # Tags like voxia-v0.2.0 are not branches — checkout needs refs/tags/... (not refs/heads/...).
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'push' && github.ref || format('refs/tags/{0}', github.event.release.tag_name || github.event.inputs.tag) }}
