@@ -39,6 +39,10 @@ if [[ -z "$FFMPEG_BIN" || ! -f "$FFMPEG_BIN" ]]; then
   exit 1
 fi
 
-chmod +x "$FFMPEG_BIN"
-"$ROOT/scripts/prepare-ffmpeg-sidecar.sh" "$FFMPEG_BIN"
+# Copy into RUNNER_TEMP — do not chmod system paths like /usr/bin/ffmpeg (fails in CI).
+LOCAL_FFMPEG="$BIN_DIR/$(basename "$FFMPEG_BIN")"
+cp "$FFMPEG_BIN" "$LOCAL_FFMPEG"
+chmod +x "$LOCAL_FFMPEG"
+
+"$ROOT/scripts/prepare-ffmpeg-sidecar.sh" "$LOCAL_FFMPEG"
 echo "ffmpeg sidecar ready for $(rustc --print host-tuple)"

@@ -91,6 +91,13 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 
 4. Enable branch protection on `main`: require PR title / CI checks to pass.
 
+5. **release-please must open PRs** — in the repo on GitHub go to **Settings → Actions → General → Workflow permissions**:
+   - Select **Read and write permissions**
+   - Check **Allow GitHub Actions to create and approve pull requests**
+   - Save
+
+   If your organization forbids that for `GITHUB_TOKEN`, create a fine-grained PAT (or classic PAT) with **Contents** and **Pull requests** write access on this repo, add it as secret `RELEASE_PLEASE_TOKEN`, and re-run the workflow.
+
 ### Release flow
 
 1. Merge conventional commits to `main`.

@@ -6,16 +6,27 @@ on:
       - main
       - master
 
+# Job-level permissions apply to GITHUB_TOKEN for this workflow.
+# If this still fails, enable in repo Settings → Actions → General:
+#   - "Read and write permissions"
+#   - "Allow GitHub Actions to create and approve pull requests"
+# Or set secret RELEASE_PLEASE_TOKEN (fine-grained PAT with Contents + Pull requests write).
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     steps:
       - uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer RELEASE_PLEASE_TOKEN when org policy blocks GITHUB_TOKEN from opening PRs.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: .github/release-please-config.json
           manifest-file: .release-please-manifest.json
