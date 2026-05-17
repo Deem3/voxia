@@ -18,13 +18,17 @@ jobs:
       - run: bun run build
 
   rust:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install build deps (Whisper / bindgen)
+      - name: Install Linux build dependencies (Tauri + Whisper)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake pkg-config libssl-dev libclang-dev
+          chmod +x scripts/ci-install-linux-deps.sh
+          ./scripts/ci-install-linux-deps.sh
+      - name: Prepare FFmpeg sidecar
+        run: |
+          chmod +x scripts/ci-prepare-ffmpeg.sh scripts/prepare-ffmpeg-sidecar.sh
+          ./scripts/ci-prepare-ffmpeg.sh
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
