@@ -102,8 +102,14 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 
 1. Merge conventional commits to `main`.
 2. Merge the **release-please** Release PR when ready to ship.
-3. GitHub Actions `release.yml` builds macOS (aarch64), Windows, and Linux artifacts, signs updater bundles, and uploads `latest.json`.
+3. GitHub Actions **`Release`** workflow builds macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage`), then uploads them to the GitHub Release (plus `latest.json` for the updater).
 4. Users: **Settings → Updates → Check for updates** (production builds only).
+
+**Only see “Source code (zip)” on the release?** GitHub always adds those automatically. Installers appear only after the **`Release`** workflow succeeds.
+
+- **Cause:** Releases created with the default `GITHUB_TOKEN` do **not** start other workflows. Configure `RELEASE_PLEASE_TOKEN` (PAT) for release-please (see step 5 above), *or* run **Actions → Release → Run workflow** and enter the tag (e.g. `v0.2.0`).
+- **Also required:** secret `TAURI_SIGNING_PRIVATE_KEY` (see step 1).
+- Check **Actions → Release** for failed macOS / Windows / Linux jobs.
 
 Private repositories: the default `latest.json` URL requires a **public** release asset URL; use a custom endpoint or proxy if the repo is private.
 
