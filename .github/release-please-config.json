@@ -5,7 +5,14 @@
       "release-type": "node",
       "component": "voxia",
       "changelog-path": "CHANGELOG.md",
-      "extra-files": ["src-tauri/Cargo.toml", "src-tauri/tauri.conf.json"]
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "src-tauri/Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        "src-tauri/tauri.conf.json"
+      ]
     }
   }
 }
