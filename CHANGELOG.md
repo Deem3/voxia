@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/Deem3/voxia/compare/voxia-v0.2.3...voxia-v0.2.4) (2026-05-17)
+
+
+### Bug Fixes
+
+* skip github release ([#13](https://github.com/Deem3/voxia/issues/13)) ([a9b37e7](https://github.com/Deem3/voxia/commit/a9b37e7fe421e0e91b78aeace06a384fafa1e75a))
+
 ## [0.2.3](https://github.com/Deem3/voxia/compare/voxia-v0.2.2...voxia-v0.2.3) (2026-05-17)
 
 
