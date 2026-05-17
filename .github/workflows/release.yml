@@ -2,12 +2,14 @@ name: Release
 
 # GitHub does NOT run workflows triggered by GITHUB_TOKEN (release-please's default).
 # Use secret RELEASE_PLEASE_TOKEN (PAT) for release-please, OR re-run this workflow manually.
+#
+# release-please uses skip-github-release: true (tag only). This workflow creates the
+# GitHub Release and uploads installers. Re-running on a tag that already has a
+# published release fails with "Cannot upload assets to an immutable release".
 on:
   push:
     tags:
       - "voxia-v*"
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
