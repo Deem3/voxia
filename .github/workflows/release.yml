@@ -25,9 +25,11 @@ jobs:
   verify-versions:
     runs-on: ubuntu-latest
     steps:
+      # v0.2.0 is a tag, not a branch — checkout needs refs/tags/... (not refs/heads/...).
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'push' && github.ref || format('refs/tags/{0}', github.event.release.tag_name || github.event.inputs.tag) }}
+          fetch-depth: 0
       - run: chmod +x scripts/verify-versions.sh && ./scripts/verify-versions.sh
 
   build-tauri:
@@ -52,7 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'push' && github.ref || format('refs/tags/{0}', github.event.release.tag_name || github.event.inputs.tag) }}
+          fetch-depth: 0
 
       - name: Require updater signing secret
         shell: bash
