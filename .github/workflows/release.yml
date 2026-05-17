@@ -76,6 +76,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install frontend dependencies
+        run: bun install --frozen-lockfile
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -98,6 +101,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # Do not set TAURI_SIGNING_PRIVATE_KEY_PASSWORD here unless the key file is password-protected.
           # An empty/missing secret is correct for keys generated with: CI=true bun run tauri signer generate -w .tauri/voxia.key -f
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
+          CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
         with:
           tagName: ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}
           releaseName: "voxia ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}"

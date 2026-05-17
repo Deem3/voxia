@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Deem3/voxia/compare/voxia-v0.2.1...voxia-v0.2.2) (2026-05-17)
+
+
+### Bug Fixes
+
+* tauri script ([#8](https://github.com/Deem3/voxia/issues/8)) ([670b129](https://github.com/Deem3/voxia/commit/670b12949fd7983036fdd4c873951b8d1b7cf419))
+
 ## [0.2.1](https://github.com/Deem3/voxia/compare/voxia-v0.2.0...voxia-v0.2.1) (2026-05-17)
 
 
