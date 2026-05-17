@@ -103,6 +103,8 @@ jobs:
           # An empty/missing secret is correct for keys generated with: CI=true bun run tauri signer generate -w .tauri/voxia.key -f
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
+          CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
         with:
           tagName: ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}
           releaseName: "voxia ${{ github.event.release.tag_name || github.event.inputs.tag || github.ref_name }}"
