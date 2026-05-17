@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/Deem3/voxia/compare/voxia-v0.2.2...voxia-v0.2.3) (2026-05-17)
+
+
+### Bug Fixes
+
+* remove duplicated deployment target ([#11](https://github.com/Deem3/voxia/issues/11)) ([ba0282b](https://github.com/Deem3/voxia/commit/ba0282b2a5debf78904f354048e5a4c382933a28))
+
 ## [0.2.2](https://github.com/Deem3/voxia/compare/voxia-v0.2.1...voxia-v0.2.2) (2026-05-17)
 
 
