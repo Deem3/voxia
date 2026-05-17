@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "voxia",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "mn.deem.voxia",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -21,7 +21,14 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$HOME/**", "$DOCUMENT/**", "$DOWNLOAD/**", "$DESKTOP/**", "$VIDEO/**", "$AUDIO/**"]
+        "scope": [
+          "$HOME/**",
+          "$DOCUMENT/**",
+          "$DOWNLOAD/**",
+          "$DESKTOP/**",
+          "$VIDEO/**",
+          "$AUDIO/**"
+        ]
       }
     }
   },
@@ -29,7 +36,9 @@
     "active": true,
     "targets": "all",
     "createUpdaterArtifacts": true,
-    "externalBin": ["binaries/ffmpeg"],
+    "externalBin": [
+      "binaries/ffmpeg"
+    ],
     "macOS": {
       "minimumSystemVersion": "10.15"
     },
