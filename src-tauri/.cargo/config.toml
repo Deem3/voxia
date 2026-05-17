@@ -1,0 +1,8 @@
+# whisper.cpp (via whisper-rs-sys) uses std::filesystem, which libc++ only exposes for macOS 10.15+.
+# Without this, ggml-backend-reg.cpp fails with "'path' is unavailable: introduced in macOS 10.15".
+#
+# Cargo's [env] does NOT override an already-set variable unless `force = true` (e.g. Xcode or the shell
+# may export MACOSX_DEPLOYMENT_TARGET=10.13).
+[env]
+MACOSX_DEPLOYMENT_TARGET = { value = "10.15", force = true }
+CMAKE_OSX_DEPLOYMENT_TARGET = { value = "10.15", force = true }
