@@ -63,7 +63,7 @@ bun run verify:versions
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 
-- **Pull request titles** must be conventional (e.g. `feat: add cue split shortcut`) — enforced in CI.
+- **Pull request titles** must be conventional (e.g. `feat: add cue split shortcut`) — enforced in CI on PRs **into `main` / `master` only**.
 - Examples: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `perf:`, `test:`, `build:`, `ci:`
 
 [release-please](https://github.com/googleapis/release-please) opens a **Release PR** that bumps versions and updates `CHANGELOG.md`. Merging that PR creates tag `voxia-vX.Y.Z` (component prefix from config) and a GitHub Release, which triggers the Tauri build workflow.
@@ -107,7 +107,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 
 **Only see “Source code (zip)” on the release?** GitHub always adds those automatically. Installers appear only after the **`Release`** workflow succeeds.
 
-- **Cause:** Releases created with the default `GITHUB_TOKEN` do **not** start other workflows. Configure `RELEASE_PLEASE_TOKEN` (PAT) for release-please (see step 5 above), _or_ run **Actions → Release → Run workflow** and enter the tag exactly as on GitHub (e.g. `voxia-v0.2.0`, not `v0.2.0`).
+- **Cause:** Releases created with the default `GITHUB_TOKEN` do **not** start other workflows. Configure `RELEASE_PLEASE_TOKEN` (PAT) for release-please (see step 5 above), _or_ run **Actions → Release → Run workflow** from branch **`main`**, and enter the tag exactly as on GitHub (e.g. `voxia-v0.2.0`, not `v0.2.0`).
 - **Also required:** secret `TAURI_SIGNING_PRIVATE_KEY` (see step 1).
 - Check **Actions → Release** for failed macOS / Windows / Linux jobs.
 
