@@ -77,9 +77,10 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
    ```
 
    - Copy the **public** key (single line) into `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`.
-   - Set GitHub repository secrets:
-     - `TAURI_SIGNING_PRIVATE_KEY` — full contents of `.tauri/voxia.key` (never commit).
-     - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — leave empty if the key has no password.
+     - Set GitHub repository secret:
+       - `TAURI_SIGNING_PRIVATE_KEY` — full contents of `.tauri/voxia.key` (never commit).
+     - If the key has **no password** (default when using `CI=true … signer generate -f`), **do not** create `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` in GitHub Secrets. An empty value causes `Wrong password for that key` in CI.
+     - Only add `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` if you explicitly set a password when generating the key.
 
 2. **GitHub repo URL** — set `plugins.updater.endpoints` in `tauri.conf.json` to your repo:
 
