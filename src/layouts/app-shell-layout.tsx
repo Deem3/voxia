@@ -1,7 +1,7 @@
 "use client"
 
 import { getVersion } from "@tauri-apps/api/app"
-import { BooksIcon as Books, GearSixIcon as GearSix, WaveformIcon as Waveform } from "@phosphor-icons/react"
+import { BooksIcon as Books, GearSixIcon as GearSix } from "@phosphor-icons/react"
 import { Link, Outlet, useRouterState } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 
@@ -35,10 +35,17 @@ const MobileSidebarTrigger = () => {
 
 const BrandMark = () => (
   <span
-    className="inline-flex size-6 shrink-0 items-center justify-center bg-foreground text-background shadow-[2px_2px_0_0_var(--signal)] transition-shadow group-hover:shadow-[3px_3px_0_0_var(--signal)]"
+    className="inline-flex size-7 shrink-0 items-center justify-center bg-foreground/5 shadow-[2px_2px_0_0_var(--signal)] transition-shadow group-hover:shadow-[3px_3px_0_0_var(--signal)]"
     aria-hidden
   >
-    <Waveform className="size-3.5" weight="fill" />
+    <img
+      src="/voxia-icon.png"
+      alt=""
+      width={20}
+      height={20}
+      className="size-5 object-contain"
+      draggable={false}
+    />
   </span>
 )
 
