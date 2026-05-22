@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/Deem3/voxia/compare/voxia-v0.2.4...voxia-v0.3.0) (2026-05-22)
+
+
+### Features
+
+* remove spec folder ([#18](https://github.com/Deem3/voxia/issues/18)) ([f8fab18](https://github.com/Deem3/voxia/commit/f8fab18109d6203c07fa1f9c5c6197dd3beaf29d))
+* test commit ([#15](https://github.com/Deem3/voxia/issues/15)) ([056af8e](https://github.com/Deem3/voxia/commit/056af8ed577029e3e00b88ebcb825e1834ca91de))
+
+
+### Bug Fixes
+
+* improvement on ui/ux ([#16](https://github.com/Deem3/voxia/issues/16)) ([65bb256](https://github.com/Deem3/voxia/commit/65bb25637219050e13632d36b4110c26391ba40a))
+
 ## [0.2.4](https://github.com/Deem3/voxia/compare/voxia-v0.2.3...voxia-v0.2.4) (2026-05-17)
 
 
