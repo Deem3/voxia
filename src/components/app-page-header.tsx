@@ -1,4 +1,4 @@
-import { Books, CaretRight, GearSix } from "@phosphor-icons/react"
+import { BooksIcon as Books, CaretRightIcon as CaretRight, GearSixIcon as GearSix } from "@phosphor-icons/react"
 import { Link, useRouterState } from "@tanstack/react-router"
 
 import { projectDisplayName } from "@/lib/project-display-name"

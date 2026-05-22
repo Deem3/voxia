@@ -1,7 +1,7 @@
 "use client"
 
 import { getVersion } from "@tauri-apps/api/app"
-import { Books, GearSix } from "@phosphor-icons/react"
+import { BooksIcon as Books, GearSixIcon as GearSix, WaveformIcon as Waveform } from "@phosphor-icons/react"
 import { Link, Outlet, useRouterState } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 
@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -32,6 +33,15 @@ const MobileSidebarTrigger = () => {
   return <SidebarTrigger className="-ms-1 shrink-0" />
 }
 
+const BrandMark = () => (
+  <span
+    className="inline-flex size-6 shrink-0 items-center justify-center bg-foreground text-background shadow-[2px_2px_0_0_var(--signal)] transition-shadow group-hover:shadow-[3px_3px_0_0_var(--signal)]"
+    aria-hidden
+  >
+    <Waveform className="size-3.5" weight="fill" />
+  </span>
+)
+
 export const AppShellLayout = () => {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const [version, setVersion] = useState("")
@@ -48,85 +58,115 @@ export const AppShellLayout = () => {
 
   return (
     <TooltipProvider delayDuration={300}>
-    <SidebarProvider>
-      <Sidebar
-        collapsible="icon"
-        variant="sidebar"
-        className="border-r border-sidebar-border"
-      >
-        <SidebarHeader className="border-b border-sidebar-border p-2">
-          <div className="flex h-8 items-center gap-1 px-1 group-data-[collapsible=icon]:justify-center">
-            <p className="min-w-0 flex-1 truncate px-1 text-sm font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-              Voxia
-            </p>
-            <SidebarTrigger className="shrink-0" />
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigate</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === "/library" || pathname.startsWith("/editor")}
-                  >
-                    <Link
-                      to="/library"
-                      title={
-                        pathname.startsWith("/editor")
-                          ? "Back to all projects"
-                          : "Project library"
-                      }
-                      aria-current={
-                        pathname === "/library" || pathname.startsWith("/editor")
-                          ? "page"
-                          : undefined
-                      }
-                    >
-                      <Books className="size-4" weight="duotone" aria-hidden />
-                      <span>
-                        {pathname.startsWith("/editor") ? "All projects" : "Library"}
-                      </span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === "/settings"}>
-                    <Link to="/settings" aria-current={pathname === "/settings" ? "page" : undefined}>
-                      <GearSix className="size-4" weight="duotone" aria-hidden />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset className="flex min-w-0 h-svh flex-col bg-background">
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 md:px-4">
-          <MobileSidebarTrigger />
-          <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <AppPageHeader />
+      <SidebarProvider>
+        <Sidebar
+          collapsible="icon"
+          variant="sidebar"
+          className="border-r border-sidebar-border"
+        >
+          <SidebarHeader className="border-b border-sidebar-border p-2">
+            <div className="flex h-8 items-center gap-2 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+              <span className="group-data-[collapsible=icon]:hidden">
+                <BrandMark />
+              </span>
+              <div className="min-w-0 flex-1 leading-none group-data-[collapsible=icon]:hidden">
+                <p className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
+                  Voxia
+                </p>
+                <p className="truncate text-[0.6rem] uppercase tracking-[0.18em] text-muted-foreground">
+                  Subtitle Studio
+                </p>
               </div>
+              <SidebarTrigger className="shrink-0" />
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-[0.6rem] uppercase tracking-[0.18em]">
+                Workspace
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === "/library" || pathname.startsWith("/editor")}
+                      tooltip="Library"
+                    >
+                      <Link
+                        to="/library"
+                        title={
+                          pathname.startsWith("/editor")
+                            ? "Back to all projects"
+                            : "Project library"
+                        }
+                        aria-current={
+                          pathname === "/library" || pathname.startsWith("/editor")
+                            ? "page"
+                            : undefined
+                        }
+                      >
+                        <Books className="size-4" weight="duotone" aria-hidden />
+                        <span>
+                          {pathname.startsWith("/editor") ? "All projects" : "Library"}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === "/settings"}
+                      tooltip="Settings"
+                    >
+                      <Link to="/settings" aria-current={pathname === "/settings" ? "page" : undefined}>
+                        <GearSix className="size-4" weight="duotone" aria-hidden />
+                        <span>Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter className="border-t border-sidebar-border p-2">
+            <div className="flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:hidden">
+              <span className="text-[0.6rem] uppercase tracking-[0.18em] text-muted-foreground">
+                Build
+              </span>
               {version ? (
-                <Badge variant="secondary" className="hidden shrink-0 rounded-none font-mono text-[0.65rem] sm:inline-flex">
+                <span className="font-mono text-[0.65rem] text-muted-foreground">
                   v{version}
-                </Badge>
+                </span>
               ) : null}
             </div>
-            <ModeToggle />
-          </div>
-        </header>
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none p-4 md:p-6">
-          <Outlet />
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset className="flex min-w-0 h-svh flex-col bg-background">
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-sm md:px-4">
+            <MobileSidebarTrigger />
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <AppPageHeader />
+                </div>
+                {version ? (
+                  <Badge
+                    variant="outline"
+                    className="hidden shrink-0 rounded-none border-border bg-background font-mono text-[0.65rem] sm:inline-flex"
+                  >
+                    v{version}
+                  </Badge>
+                ) : null}
+              </div>
+              <ModeToggle />
+            </div>
+          </header>
+          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none p-4 md:p-6">
+            <Outlet />
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </TooltipProvider>
   )
 }

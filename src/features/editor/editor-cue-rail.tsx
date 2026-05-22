@@ -136,9 +136,9 @@ export const EditorCueRail = ({
             >
               <div
                 className={cn(
-                  "flex cursor-pointer flex-col gap-1 px-3 py-2 text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring",
-                  isPlayhead && "z-[1] bg-primary/12 ring-1 ring-primary/50",
-                  isSelected && !isPlayhead && "z-[1] ring-1 ring-ring/40",
+                  "relative flex cursor-pointer flex-col gap-1 px-3 py-2 pl-4 text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring",
+                  isPlayhead && "z-[1] bg-signal-muted",
+                  isSelected && !isPlayhead && "z-[1] bg-muted/60 ring-1 ring-ring/30",
                 )}
                 role="button"
                 tabIndex={0}
@@ -147,8 +147,15 @@ export const EditorCueRail = ({
                 onClick={handleActivate}
                 onKeyDown={handleKeyDown}
               >
+                <span
+                  className={cn(
+                    "absolute inset-y-0 left-0 w-[3px] transition-colors",
+                    isPlayhead ? "bg-signal" : isSelected ? "bg-foreground/40" : "bg-transparent",
+                  )}
+                  aria-hidden
+                />
                 <p className="shrink-0 font-mono text-[0.6rem] leading-tight text-muted-foreground">
-                  <span className="text-foreground/90">
+                  <span className={cn("font-semibold", isPlayhead ? "text-signal" : "text-foreground/90")}>
                     {formatMsHms(cue.startMs)}
                   </span>
                   <span className="px-0.5 text-muted-foreground">→</span>

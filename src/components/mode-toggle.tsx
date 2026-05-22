@@ -1,5 +1,3 @@
-"use client"
-
 import { Monitor, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
@@ -28,7 +26,7 @@ export const ModeToggle = () => {
 
   if (!mounted) {
     return (
-      <Button type="button" variant="outline" size="icon" disabled aria-label="Theme">
+      <Button type="button" variant="outline" size="icon-sm" disabled aria-label="Theme">
         <Sun className="size-4 opacity-0" />
       </Button>
     )
@@ -36,19 +34,19 @@ export const ModeToggle = () => {
 
   const icon =
     resolvedTheme === "dark" ? (
-      <Moon className="size-4" aria-hidden />
+      <Moon className="size-4 text-signal" aria-hidden />
     ) : (
-      <Sun className="size-4" aria-hidden />
+      <Sun className="size-4 text-signal" aria-hidden />
     )
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="icon" aria-label="Theme menu">
+        <Button type="button" variant="outline" size="icon-sm" aria-label="Theme menu" title="Theme">
           {icon}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-40">
+      <DropdownMenuContent align="end" className="min-w-44">
         <DropdownMenuItem onClick={() => applyTheme("light", setTheme)}>
           <Sun className="mr-2 size-4" aria-hidden />
           Light

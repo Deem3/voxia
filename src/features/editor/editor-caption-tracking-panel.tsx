@@ -45,11 +45,12 @@ export const EditorCaptionTrackingPanel = ({
       style={panelStyle}
       aria-label="Caption tracking beside video"
     >
-      <header className="shrink-0 border-b border-border px-2 py-2">
-        <p className="truncate text-xs font-semibold text-foreground">
+      <header className="shrink-0 border-b border-border bg-card/60 px-3 py-2.5">
+        <p className="flex items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-foreground">
+          <span className="inline-flex h-1 w-3 bg-signal" aria-hidden />
           Caption tracking
         </p>
-        <p className="truncate text-[0.65rem] text-muted-foreground">
+        <p className="mt-1 truncate text-[0.65rem] text-muted-foreground">
           {cues.length === 0
             ? "Transcribe to see lines here"
             : `${cues.length} cue${cues.length === 1 ? "" : "s"} · follows playback · click to seek`}

@@ -1,5 +1,5 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { Translate } from "@phosphor-icons/react"
+import { TranslateIcon as Translate } from "@phosphor-icons/react"
 import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -139,17 +139,29 @@ const CueRow = ({
   }
 
   return (
-    <div className={active ? "rounded-none bg-muted/50 ring-1 ring-ring/40" : ""}>
+    <div
+      className={cn(
+        active
+          ? "relative bg-signal-muted ring-1 ring-signal/40"
+          : "relative",
+      )}
+    >
+      {active ? (
+        <span className="absolute inset-y-0 left-0 w-[3px] bg-signal" aria-hidden />
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="w-8 text-left font-mono text-[0.65rem] text-muted-foreground hover:text-foreground"
+          className={cn(
+            "w-8 text-left font-mono text-[0.65rem] tabular-nums",
+            active ? "font-semibold text-signal" : "text-muted-foreground hover:text-foreground",
+          )}
           onClick={() => {
             onSelect(index)
             onSeek(cue.startMs)
           }}
         >
-          {index + 1}
+          {String(index + 1).padStart(2, "0")}
         </button>
         <Input
           aria-label={`Cue ${index + 1} start`}
