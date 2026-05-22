@@ -1,4 +1,4 @@
-import { ArrowLeft, Books } from "@phosphor-icons/react"
+import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 
 import { buttonVariants } from "@/components/ui/button"
@@ -18,16 +18,21 @@ export const BackToLibraryLink = ({
     to="/library"
     className={cn(
       buttonVariants({
-        variant: variant === "prominent" ? "outline" : "ghost",
-        size: variant === "prominent" ? "sm" : "sm",
+        variant: variant === "prominent" ? "ghost" : "ghost",
+        size: "xs",
       }),
-      variant === "prominent" && "border-primary/30 bg-muted/30",
+      "group/back inline-flex h-6 gap-1 px-1 text-muted-foreground hover:text-foreground",
       className,
     )}
     aria-label="Back to all projects in Library"
   >
-    <ArrowLeft className="size-4 shrink-0" weight="bold" aria-hidden />
-    <Books className="size-4 shrink-0" weight="duotone" aria-hidden />
-    <span>All projects</span>
+    <ArrowLeft
+      className="size-3.5 shrink-0 transition-transform group-hover/back:-translate-x-0.5"
+      weight="bold"
+      aria-hidden
+    />
+    <span className="text-[0.65rem] font-medium uppercase tracking-[0.18em]">
+      All projects
+    </span>
   </Link>
 )

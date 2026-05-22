@@ -1,4 +1,4 @@
-import { Pause, Play, Rewind, FastForward } from "@phosphor-icons/react"
+import { PauseIcon as Pause, PlayIcon as Play, RewindIcon as Rewind, FastForwardIcon as FastForward } from "@phosphor-icons/react"
 import { useEffect, useRef } from "react"
 
 import { CaptionOverlay } from "@/features/editor/caption-overlay"
@@ -96,8 +96,8 @@ export const VideoPanel = ({
   }
 
   return (
-    <div className="space-y-3 rounded-none border border-border bg-muted/30 p-3">
-      <div ref={boundsRef} className="relative overflow-hidden rounded-none border border-border bg-black">
+    <div className="space-y-3 border border-border bg-muted/30 p-3 shadow-[0_0_0_1px_color-mix(in_oklab,var(--signal)_8%,transparent)]">
+      <div ref={boundsRef} className="relative overflow-hidden border border-border bg-black">
         <video
           ref={ref}
           src={videoSrc}
@@ -132,23 +132,37 @@ export const VideoPanel = ({
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="icon-sm" variant="secondary" onClick={handleTogglePlay} aria-label={playing ? "Pause" : "Play"}>
-          {playing ? <Pause className="size-4" weight="duotone" aria-hidden /> : <Play className="size-4" weight="duotone" aria-hidden />}
+        <Button
+          type="button"
+          size="icon-sm"
+          variant={playing ? "signal" : "default"}
+          onClick={handleTogglePlay}
+          aria-label={playing ? "Pause" : "Play"}
+          title={playing ? "Pause (Space)" : "Play (Space)"}
+        >
+          {playing ? <Pause className="size-4" weight="fill" aria-hidden /> : <Play className="size-4" weight="fill" aria-hidden />}
         </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => seek(usePlayerStore.getState().currentTimeMs - 5000)} aria-label="Back 5 seconds">
-          <Rewind className="size-4" weight="duotone" aria-hidden />
-          <span className="sr-only">-5s</span>
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => seek(usePlayerStore.getState().currentTimeMs + 5000)} aria-label="Forward 5 seconds">
-          <FastForward className="size-4" weight="duotone" aria-hidden />
-          <span className="sr-only">+5s</span>
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => seek(usePlayerStore.getState().currentTimeMs - FRAME_MS)} aria-label="Previous frame">
-          −f
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => seek(usePlayerStore.getState().currentTimeMs + FRAME_MS)} aria-label="Next frame">
-          +f
-        </Button>
+        <div className="flex items-center gap-px border border-border bg-card/60 p-0.5">
+          <Button type="button" size="icon-sm" variant="ghost" onClick={() => seek(usePlayerStore.getState().currentTimeMs - 5000)} aria-label="Back 5 seconds" title="Back 5s (J)">
+            <Rewind className="size-4" weight="duotone" aria-hidden />
+          </Button>
+          <Button type="button" size="icon-sm" variant="ghost" onClick={() => seek(usePlayerStore.getState().currentTimeMs + 5000)} aria-label="Forward 5 seconds" title="Forward 5s (L)">
+            <FastForward className="size-4" weight="duotone" aria-hidden />
+          </Button>
+        </div>
+        <div className="flex items-center gap-px border border-border bg-card/60 p-0.5">
+          <Button type="button" size="icon-sm" variant="ghost" onClick={() => seek(usePlayerStore.getState().currentTimeMs - FRAME_MS)} aria-label="Previous frame" title="Previous frame">
+            <span className="font-mono text-[0.65rem] font-semibold">−f</span>
+          </Button>
+          <Button type="button" size="icon-sm" variant="ghost" onClick={() => seek(usePlayerStore.getState().currentTimeMs + FRAME_MS)} aria-label="Next frame" title="Next frame">
+            <span className="font-mono text-[0.65rem] font-semibold">+f</span>
+          </Button>
+        </div>
+        <span className="ml-1 font-mono text-[0.65rem] tabular-nums text-muted-foreground">
+          <span className="text-foreground">{formatTimeMs(currentTimeMs)}</span>
+          <span className="px-1 opacity-60">/</span>
+          <span>{formatTimeMs(durationMs)}</span>
+        </span>
         <div className="min-w-[120px] flex-1 px-1">
           <Slider
             value={[Math.min(currentTimeMs, Math.max(durationMs, 1))]}
@@ -161,4 +175,14 @@ export const VideoPanel = ({
       </div>
     </div>
   )
+}
+
+const formatTimeMs = (ms: number) => {
+  if (!Number.isFinite(ms) || ms <= 0) return "00:00"
+  const totalSec = Math.round(ms / 1000)
+  const h = Math.floor(totalSec / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
+  const s = totalSec % 60
+  const pad = (n: number) => n.toString().padStart(2, "0")
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
 }

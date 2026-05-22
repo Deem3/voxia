@@ -1,4 +1,4 @@
-import { ListBullets } from "@phosphor-icons/react"
+import { ListBulletsIcon as ListBullets } from "@phosphor-icons/react"
 
 import { Button } from "@/components/ui/button"
 import { CueList } from "@/features/editor/cue-list"
@@ -45,8 +45,11 @@ export const EditorCueDrawer = ({
         className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-xl"
         aria-describedby="editor-cue-drawer-description"
       >
-        <SheetHeader className="shrink-0 space-y-1 border-b border-border px-4 py-3 pr-12 text-left">
-          <SheetTitle className="text-base">Edit cues</SheetTitle>
+        <SheetHeader className="shrink-0 space-y-1 border-b border-border bg-card/40 px-4 py-3 pr-12 text-left">
+          <SheetTitle className="flex items-center gap-2 text-base">
+            <span className="inline-flex h-1 w-3 bg-signal" aria-hidden />
+            Edit cues
+          </SheetTitle>
           <SheetDescription id="editor-cue-drawer-description" className="text-xs">
             {cues.length === 0
               ? "Transcribe the video to generate cues."

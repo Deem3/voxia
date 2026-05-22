@@ -1,6 +1,6 @@
 "use client"
 
-import { CaretDown, CaretUp, TextAa } from "@phosphor-icons/react"
+import { CaretDownIcon as CaretDown, CaretUpIcon as CaretUp, TextAaIcon as TextAa } from "@phosphor-icons/react"
 import { useState } from "react"
 
 import { CaptionColorFields } from "@/features/editor/caption-color-fields"
@@ -55,12 +55,12 @@ export const ProjectCaptionAppearanceBar = ({
   }
 
   return (
-    <div className="rounded-none border border-border bg-muted/20">
+    <div className="border border-border bg-card/40">
       <div className="flex min-w-0 flex-wrap items-center gap-2 p-2">
         <Button
           type="button"
           size="sm"
-          variant={expanded ? "secondary" : "outline"}
+          variant={expanded ? "default" : "outline"}
           onClick={handleToggleExpanded}
           aria-expanded={expanded}
           aria-controls="project-caption-appearance-panel"
@@ -76,11 +76,18 @@ export const ProjectCaptionAppearanceBar = ({
             <CaretDown className="size-3.5 opacity-70" weight="bold" aria-hidden />
           )}
         </Button>
+        {hasProjectOverride ? (
+          <span
+            className="inline-flex items-center border border-signal/40 bg-signal-muted px-1.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-wide text-signal"
+            title="This project overrides the global defaults"
+          >
+            Project override
+          </span>
+        ) : null}
         {!expanded ? (
-          <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-            {hasProjectOverride
-              ? `Project: ${displayFontSizePx}px · ${captionPositionSummary(displayCaptionPosition)} · ${captionColorsSummary(displayCaptionColors)}`
-              : `Settings default · ${displayFontSizePx}px · ${captionPositionSummary(displayCaptionPosition)} · ${captionColorsSummary(displayCaptionColors)}`}
+          <p className="min-w-0 flex-1 truncate text-[0.65rem] text-muted-foreground">
+            {displayFontSizePx}px · {captionPositionSummary(displayCaptionPosition)} ·{" "}
+            {captionColorsSummary(displayCaptionColors)}
           </p>
         ) : null}
       </div>

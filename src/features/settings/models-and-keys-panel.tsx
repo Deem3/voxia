@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowClockwise, DownloadSimple, Trash } from "@phosphor-icons/react"
+import { ArrowClockwiseIcon as ArrowClockwise, DownloadSimpleIcon as DownloadSimple, TrashIcon as Trash } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
