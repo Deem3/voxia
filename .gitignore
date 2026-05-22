@@ -30,3 +30,6 @@ src-tauri/binaries/ffmpeg-*
 *.njsproj
 *.sln
 *.sw?
+
+# Local agent / planning docs (not shipped)
+specs/
