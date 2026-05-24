@@ -103,15 +103,15 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 
 1. Merge conventional commits to `main`.
 2. Merge the **release-please** Release PR when ready to ship.
-3. **`Tag Release`** creates git tag `voxia-vX.Y.Z` (release-please skips tags when `skip-github-release` is set).
+3. **`Tag Release`** creates git tag `voxia-vX.Y.Z` for any merged release PR still missing a tag (runs on every push to `main`, not only the release merge commit).
 4. Tag push starts **`Release`**, which builds macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage`), creates the GitHub Release, and uploads assets (plus `latest.json` for the updater).
 5. Users: **Settings → Updates → Check for updates** (production builds only).
 
-**Release PR merged but no deploy?** Check **Actions → Tag Release** and **Actions → Release**. With `skip-github-release`, release-please will not create the tag itself ([upstream issue](https://github.com/googleapis/release-please/issues/1561)). To recover manually:
+**Release PR merged but no deploy?** Push any commit to `main` (or run **Actions → Tag Release**) — it scans for merged release PRs without tags. With `skip-github-release`, release-please will not create the tag itself ([upstream issue](https://github.com/googleapis/release-please/issues/1561)). Manual recovery:
 
-1. On `main`, create the tag: `git tag voxia-v0.3.0 <release-merge-sha> && git push origin voxia-v0.3.0`
-2. On merged release PR #N, remove label `autorelease: pending` and add `autorelease: tagged`.
-3. Or run **Actions → Release → Run workflow** from **`main`** with tag `voxia-v0.3.0` (tag must exist on GitHub first).
+1. **Actions → Tag Release → Run workflow** with version e.g. `0.3.0`, or leave empty to tag all missing releases.
+2. Or create the tag locally: `git tag voxia-v0.3.0 <release-merge-sha> && git push origin voxia-v0.3.0`
+3. Ensure **`RELEASE_PLEASE_TOKEN`** is set so tag pushes trigger **Release**.
 
 **Only see “Source code (zip)” on the release?** GitHub always adds those automatically. Installers appear only after the **`Release`** workflow succeeds.
 
