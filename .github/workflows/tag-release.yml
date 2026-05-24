@@ -1,9 +1,10 @@
 name: Tag Release
 
 # release-please with skip-github-release: true does not create git tags (see
-# https://github.com/googleapis/release-please/issues/1561). After a release PR
-# merges, this workflow creates voxia-vX.Y.Z so the Release workflow can build
-# installers. Use RELEASE_PLEASE_TOKEN (PAT) so the tag push triggers Release.
+# https://github.com/googleapis/release-please/issues/1561). This workflow creates
+# voxia-vX.Y.Z for any merged release PR that is still missing a tag — including
+# when the Tag Release fix lands after the release PR merged. Use RELEASE_PLEASE_TOKEN
+# (PAT) so the tag push triggers the Release workflow.
 on:
   push:
     branches:
@@ -12,8 +13,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Manifest version to tag (e.g. 0.3.0)"
-        required: true
+        description: "Version to tag (e.g. 0.3.0). Leave empty to tag all missing releases."
+        required: false
 
 permissions:
   contents: write
@@ -28,57 +29,92 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
 
-      - name: Resolve version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "version=$(jq -r '."."' .release-please-manifest.json)" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Create and push release tag
+      - name: Create and push missing release tags
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-          TAG: voxia-v${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          DISPATCH_VERSION: ${{ github.event.inputs.version }}
         run: |
           set -euo pipefail
-
-          if [[ "${{ github.event_name }}" == "push" ]] && \
-            ! git log -1 --pretty=%B | grep -qE 'chore\(main\): release voxia [0-9]+\.[0-9]+\.[0-9]+'; then
-            echo "Latest commit is not a merged release-please PR — skipping tag."
-            exit 0
-          fi
-
-          if git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists on remote."
-            exit 0
-          fi
-
-          TARGET="$(git log origin/main --grep="chore(main): release voxia ${VERSION}" -n 1 --format=%H || true)"
-          if [[ -z "$TARGET" ]]; then
-            echo "::error::Could not find release merge commit for voxia ${VERSION} on main."
-            exit 1
-          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${TAG}" "${TARGET}" -m "Release voxia ${VERSION}"
-          git push origin "${TAG}"
 
-      - name: Mark merged release PR as tagged
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          PR="$(
-            gh pr list --state merged --search "chore(main): release voxia ${VERSION} in:title" \
-              --json number --jq '.[0].number // empty'
-          )"
-          if [[ -z "$PR" ]]; then
-            echo "No merged release PR found for version ${VERSION}."
+          tag_exists() {
+            git ls-remote --exit-code origin "refs/tags/voxia-v$1" >/dev/null 2>&1
+          }
+
+          find_release_sha() {
+            git log origin/main --grep="chore(main): release voxia $1" -n 1 --format=%H || true
+          }
+
+          mark_release_pr_tagged() {
+            local version="$1"
+            local pr
+            pr="$(
+              gh pr list --state merged --search "chore(main): release voxia ${version} in:title" \
+                --json number --jq '.[0].number // empty'
+            )"
+            if [[ -z "$pr" ]]; then
+              echo "No merged release PR found for version ${version}."
+              return 0
+            fi
+            gh pr edit "$pr" --remove-label "autorelease: pending" --add-label "autorelease: tagged" || true
+          }
+
+          create_tag() {
+            local version="$1"
+            local target="$2"
+            local tag="voxia-v${version}"
+
+            if tag_exists "$version"; then
+              echo "Tag ${tag} already exists on remote."
+              return 0
+            fi
+
+            if [[ -z "$target" ]]; then
+              echo "::error::Could not find release merge commit for voxia ${version} on main."
+              return 1
+            fi
+
+            git tag -a "${tag}" "${target}" -m "Release voxia ${version}"
+            git push origin "${tag}"
+            echo "Created and pushed ${tag} at ${target}"
+            mark_release_pr_tagged "$version"
+          }
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "$DISPATCH_VERSION" ]]; then
+            create_tag "$DISPATCH_VERSION" "$(find_release_sha "$DISPATCH_VERSION")"
             exit 0
           fi
-          gh pr edit "$PR" --remove-label "autorelease: pending" --add-label "autorelease: tagged" || true
+
+          declare -A release_sha=()
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            sha="${line%% *}"
+            subject="${line#* }"
+            if [[ "$subject" =~ chore\(main\):\ release\ voxia\ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+              version="${BASH_REMATCH[1]}"
+              if [[ -z "${release_sha[$version]+x}" ]]; then
+                release_sha["$version"]="$sha"
+              fi
+            fi
+          done < <(git log origin/main --format='%H %s')
+
+          if [[ "${#release_sha[@]}" -eq 0 ]]; then
+            echo "No release merge commits found on main."
+            exit 0
+          fi
+
+          mapfile -t versions < <(printf '%s\n' "${!release_sha[@]}" | sort -V)
+          tagged_any=false
+          for version in "${versions[@]}"; do
+            if tag_exists "$version"; then
+              continue
+            fi
+            create_tag "$version" "${release_sha[$version]}"
+            tagged_any=true
+          done
+
+          if [[ "$tagged_any" == "false" ]]; then
+            echo "All release merge commits on main already have tags."
+          fi
