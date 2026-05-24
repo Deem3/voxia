@@ -90,10 +90,14 @@ pub fn build_translator(
             }))
         }
         "deepseek" => {
-            let api_key = deepseek_key.filter(|k| !k.trim().is_empty()).ok_or_else(|| {
-                TranslateError::AuthFailed("missing DeepSeek API key in keyring".into())
-            })?;
-            Ok(TranslatorKind::DeepSeek(deepseek::DeepSeekTranslator { api_key }))
+            let api_key = deepseek_key
+                .filter(|k| !k.trim().is_empty())
+                .ok_or_else(|| {
+                    TranslateError::AuthFailed("missing DeepSeek API key in keyring".into())
+                })?;
+            Ok(TranslatorKind::DeepSeek(deepseek::DeepSeekTranslator {
+                api_key,
+            }))
         }
         "google" | "google_free" => {
             if let Some(api_key) = google_key.filter(|k| !k.trim().is_empty()) {
