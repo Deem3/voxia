@@ -1,0 +1,84 @@
+name: Tag Release
+
+# release-please with skip-github-release: true does not create git tags (see
+# https://github.com/googleapis/release-please/issues/1561). After a release PR
+# merges, this workflow creates voxia-vX.Y.Z so the Release workflow can build
+# installers. Use RELEASE_PLEASE_TOKEN (PAT) so the tag push triggers Release.
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Manifest version to tag (e.g. 0.3.0)"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(jq -r '."."' .release-please-manifest.json)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create and push release tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: voxia-v${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "push" ]] && \
+            ! git log -1 --pretty=%B | grep -qE 'chore\(main\): release voxia [0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "Latest commit is not a merged release-please PR — skipping tag."
+            exit 0
+          fi
+
+          if git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on remote."
+            exit 0
+          fi
+
+          TARGET="$(git log origin/main --grep="chore(main): release voxia ${VERSION}" -n 1 --format=%H || true)"
+          if [[ -z "$TARGET" ]]; then
+            echo "::error::Could not find release merge commit for voxia ${VERSION} on main."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" "${TARGET}" -m "Release voxia ${VERSION}"
+          git push origin "${TAG}"
+
+      - name: Mark merged release PR as tagged
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          PR="$(
+            gh pr list --state merged --search "chore(main): release voxia ${VERSION} in:title" \
+              --json number --jq '.[0].number // empty'
+          )"
+          if [[ -z "$PR" ]]; then
+            echo "No merged release PR found for version ${VERSION}."
+            exit 0
+          fi
+          gh pr edit "$PR" --remove-label "autorelease: pending" --add-label "autorelease: tagged" || true

@@ -102,9 +102,16 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) on `main`:
 ### Release flow
 
 1. Merge conventional commits to `main`.
-2. Merge the **release-please** Release PR when ready to ship (creates git tag `voxia-vX.Y.Z` only — no GitHub Release yet).
-3. Tag push starts **`Release`**, which builds macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage`), creates the GitHub Release, and uploads assets (plus `latest.json` for the updater).
-4. Users: **Settings → Updates → Check for updates** (production builds only).
+2. Merge the **release-please** Release PR when ready to ship.
+3. **`Tag Release`** creates git tag `voxia-vX.Y.Z` (release-please skips tags when `skip-github-release` is set).
+4. Tag push starts **`Release`**, which builds macOS (`.dmg`), Windows (`.msi` / `.exe`), and Linux (`.AppImage`), creates the GitHub Release, and uploads assets (plus `latest.json` for the updater).
+5. Users: **Settings → Updates → Check for updates** (production builds only).
+
+**Release PR merged but no deploy?** Check **Actions → Tag Release** and **Actions → Release**. With `skip-github-release`, release-please will not create the tag itself ([upstream issue](https://github.com/googleapis/release-please/issues/1561)). To recover manually:
+
+1. On `main`, create the tag: `git tag voxia-v0.3.0 <release-merge-sha> && git push origin voxia-v0.3.0`
+2. On merged release PR #N, remove label `autorelease: pending` and add `autorelease: tagged`.
+3. Or run **Actions → Release → Run workflow** from **`main`** with tag `voxia-v0.3.0` (tag must exist on GitHub first).
 
 **Only see “Source code (zip)” on the release?** GitHub always adds those automatically. Installers appear only after the **`Release`** workflow succeeds.
 
