@@ -187,12 +187,15 @@ export const ModelsAndKeysPanel = () => {
   const [azureKey, setAzureKey] = useState("")
   const [azureRegion, setAzureRegion] = useState("")
   const [googleKey, setGoogleKey] = useState("")
+  const [deepseekKey, setDeepseekKey] = useState("")
   const [hasAzure, setHasAzure] = useState(false)
   const [hasGoogle, setHasGoogle] = useState(false)
+  const [hasDeepseek, setHasDeepseek] = useState(false)
 
   useEffect(() => {
     void hasProviderKey("azure").then(setHasAzure)
     void hasProviderKey("google").then(setHasGoogle)
+    void hasProviderKey("deepseek").then(setHasDeepseek)
   }, [])
 
   useEffect(() => {
@@ -264,6 +267,13 @@ export const ModelsAndKeysPanel = () => {
     await setProviderKey("google", googleKey.trim())
     setGoogleKey("")
     setHasGoogle(true)
+  }
+
+  const handleSaveDeepseek = async () => {
+    if (!deepseekKey.trim()) return
+    await setProviderKey("deepseek", deepseekKey.trim())
+    setDeepseekKey("")
+    setHasDeepseek(true)
   }
 
   return (
@@ -387,6 +397,36 @@ export const ModelsAndKeysPanel = () => {
                 onClick={async () => {
                   await clearProviderKey("google")
                   setHasGoogle(false)
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground">DeepSeek</p>
+            <p className="text-xs text-muted-foreground">
+              API key required for the deepseek translation provider. Stored: {hasDeepseek ? "yes" : "no"}
+            </p>
+            <input
+              className="h-9 w-full border border-input bg-background px-2 font-mono text-xs"
+              placeholder="sk-..."
+              value={deepseekKey}
+              onChange={(e) => setDeepseekKey(e.target.value)}
+              autoComplete="off"
+              aria-label="DeepSeek API key"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant="secondary" onClick={handleSaveDeepseek}>
+                Save DeepSeek key
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  await clearProviderKey("deepseek")
+                  setHasDeepseek(false)
                 }}
               >
                 Clear

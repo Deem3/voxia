@@ -282,10 +282,17 @@ pub async fn translate_cues(
     let azure_key = read_key(&format!("provider_{}", "azure"));
     let azure_region = read_key(&format!("provider_{}", "azure_region"));
     let google_key = read_key(&format!("provider_{}", "google"));
+    let deepseek_key = read_key(&format!("provider_{}", "deepseek"));
 
-    let translator =
-        translate::build_translator(&app, &req.provider_id, azure_key, azure_region, google_key)
-            .map_err(|e| serde_json::to_string(&e.to_json()).unwrap())?;
+    let translator = translate::build_translator(
+        &app,
+        &req.provider_id,
+        azure_key,
+        azure_region,
+        google_key,
+        deepseek_key,
+    )
+    .map_err(|e| serde_json::to_string(&e.to_json()).unwrap())?;
 
     let src = if req.src == "auto" {
         ""
