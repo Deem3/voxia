@@ -8,16 +8,28 @@ export type UpdateCheckResult =
   | { status: "error"; message: string }
 
 const formatUpdaterError = (error: unknown): string => {
-  if (error instanceof Error) {
-    const msg = error.message
-    if (/network|fetch|connect/i.test(msg)) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : error && typeof error === "object" && "message" in error
+          ? String((error as { message: unknown }).message)
+          : ""
+
+  if (message) {
+    if (/404|not found/i.test(message)) {
+      return "Update manifest not found. The app may be pointing at the wrong GitHub repository."
+    }
+    if (/network|fetch|connect|dns|timed out/i.test(message)) {
       return "Could not reach the update server. Check your connection."
     }
-    if (/signature|sign/i.test(msg)) {
+    if (/signature|sign/i.test(message)) {
       return "Update signature verification failed."
     }
-    return msg
+    return message
   }
+
   return "An unknown error occurred while checking for updates."
 }
 

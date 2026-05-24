@@ -4,7 +4,7 @@
   "version": "0.3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/houtarou/voxia.git"
+    "url": "https://github.com/Deem3/voxia.git"
   },
   "type": "module",
   "scripts": {
