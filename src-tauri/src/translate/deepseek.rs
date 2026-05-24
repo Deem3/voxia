@@ -64,8 +64,8 @@ impl DeepSeekTranslator {
         tgt: &str,
     ) -> Result<Vec<String>, TranslateError> {
         let source = source_language_label(src);
-        let inputs = serde_json::to_string(items)
-            .map_err(|e| TranslateError::Network(e.to_string()))?;
+        let inputs =
+            serde_json::to_string(items).map_err(|e| TranslateError::Network(e.to_string()))?;
         let system = format!(
             "You translate subtitle lines accurately. Target language code: \"{tgt}\". \
              Source: {source}. Return ONLY valid JSON with shape \
