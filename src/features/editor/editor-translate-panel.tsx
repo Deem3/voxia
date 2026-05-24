@@ -71,6 +71,7 @@ export const EditorTranslatePanel = ({
             aria-label="Translator provider"
           >
             <option value="google">google (API key optional)</option>
+            <option value="deepseek">deepseek (API key required)</option>
             <option value="nllb">nllb (local)</option>
             <option value="azure">azure</option>
           </select>

@@ -249,8 +249,8 @@ export const SettingsPage = () => {
                       <Input {...field} autoComplete="off" placeholder="nllb" />
                     </FormControl>
                     <FormDescription>
-                      Examples: google, nllb, azure. Google works without an API key; add one in Models for the
-                      official API.
+                      Examples: google, deepseek, nllb, azure. Google works without an API key; DeepSeek
+                      requires an API key under Models and keys.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
