@@ -100,7 +100,7 @@ export const ProjectCaptionAppearanceBar = ({
         <div
           id="caption-appearance-panel"
           role="region"
-          aria-labelledby="caption-appearance-toggle"
+          aria-label="Caption style settings"
           className="space-y-4 border-t border-border/40 px-3 pb-4 pt-3 animate-fade-up"
         >
           <p className="text-[0.65rem] text-muted-foreground/70">
