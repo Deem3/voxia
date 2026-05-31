@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { useSettingsStore, type Theme } from "@/store/useSettingsStore"
 import { cn } from "@/lib/utils"
 
@@ -40,7 +41,6 @@ const preferencesSchema = z.object({
   defaultTargetLang: z.string(),
   modelsDirOverride: z.string(),
 })
-
 type PreferencesForm = z.infer<typeof preferencesSchema>
 
 const applyThemePreference = (value: Theme, setNextTheme: (t: string) => void) => {
@@ -48,48 +48,66 @@ const applyThemePreference = (value: Theme, setNextTheme: (t: string) => void) =
   useSettingsStore.getState().setTheme(value)
 }
 
-type SectionHeaderProps = {
+type SectionProps = {
   id?: string
   icon: React.ReactNode
   eyebrow: string
   title: string
   description?: string
+  children: React.ReactNode
+  index?: number
 }
 
-const SectionHeader = ({ id, icon, eyebrow, title, description }: SectionHeaderProps) => (
-  <div className="flex items-start gap-3">
-    <span
-      className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center border border-border bg-card text-signal"
-      aria-hidden
+const Section = ({ id, icon, eyebrow, title, description, children, index = 0 }: SectionProps) => {
+  const delayMap = ["delay-0", "delay-50", "delay-75", "delay-100", "delay-125", "delay-150", "delay-175", "delay-200"]
+  const delay = delayMap[index] ?? "delay-200"
+
+  return (
+    <section
+      className={cn("space-y-5 animate-fade-up", delay)}
+      aria-labelledby={id ?? `section-${index}`}
     >
-      {icon}
-    </span>
-    <div className="min-w-0 flex-1">
-      <p className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        {eyebrow}
-      </p>
-      <h2 id={id} className="text-lg font-semibold tracking-tight text-foreground">
-        {title}
-      </h2>
-      {description ? (
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      ) : null}
-    </div>
-  </div>
-)
+      {/* Section header */}
+      <div className="flex items-start gap-3">
+        <span className={cn(
+          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center",
+          "border border-border/60 bg-signal-muted text-signal",
+        )}>
+          {icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.55rem] font-semibold uppercase tracking-[0.28em] text-signal/70">
+            {eyebrow}
+          </p>
+          <h2 id={id ?? `section-${index}`} className="text-base font-semibold tracking-tight text-foreground">
+            {title}
+          </h2>
+          {description ? (
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground/70">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Section content */}
+      <div className="border-l border-border/40 pl-4 space-y-4">
+        {children}
+      </div>
+    </section>
+  )
+}
 
 const ThemeOption = ({
   value,
   label,
   description,
   current,
-  onSelect,
 }: {
   value: Theme
   label: string
   description: string
   current: Theme
-  onSelect: (v: Theme) => void
 }) => {
   const id = `theme-${value}`
   const active = current === value
@@ -97,22 +115,23 @@ const ThemeOption = ({
     <Label
       htmlFor={id}
       className={cn(
-        "flex cursor-pointer items-start gap-3 border bg-card/40 p-3 transition-colors hover:bg-card",
-        active ? "border-signal bg-signal-muted" : "border-border",
+        "flex cursor-pointer items-start gap-3 border bg-card/30 p-3",
+        "transition-all duration-150 hover:bg-card/60",
+        active
+          ? "border-signal/40 bg-signal-muted/50"
+          : "border-border/50 hover:border-border",
       )}
     >
-      <RadioGroupItem value={value} id={id} className="mt-1" />
-      <div className="space-y-0.5">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+      <RadioGroupItem value={value} id={id} className="mt-0.5" />
+      <div className="space-y-0.5 min-w-0">
+        <p className={cn(
+          "text-xs font-semibold transition-colors",
+          active ? "text-signal" : "text-foreground",
+        )}>
+          {label}
+        </p>
+        <p className="text-[0.65rem] text-muted-foreground/70">{description}</p>
       </div>
-      <button
-        type="button"
-        onClick={() => onSelect(value)}
-        className="sr-only"
-        aria-hidden
-        tabIndex={-1}
-      />
     </Label>
   )
 }
@@ -128,6 +147,8 @@ export const SettingsPage = () => {
   const setDefaultSourceLang = useSettingsStore((s) => s.setDefaultSourceLang)
   const setDefaultTargetLang = useSettingsStore((s) => s.setDefaultTargetLang)
   const setModelsDirOverride = useSettingsStore((s) => s.setModelsDirOverride)
+  const developerMode = useSettingsStore((s) => s.developerMode)
+  const setDeveloperMode = useSettingsStore((s) => s.setDeveloperMode)
 
   const { setTheme } = useTheme()
 
@@ -160,97 +181,90 @@ export const SettingsPage = () => {
 
   return (
     <div className="mx-auto max-w-3xl space-y-12">
-      <header className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-1 w-8 bg-signal" aria-hidden />
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+
+      {/* ── Page hero ── */}
+      <header className="space-y-3 animate-fade-up">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-block h-[2px] w-6 rounded-full bg-signal" aria-hidden />
+          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-signal/80">
             Preferences
           </p>
         </div>
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Appearance, defaults, models, and updates. Persisted via Tauri plugin-store.
+        <p className="text-xs text-muted-foreground/70">
+          Appearance, translation defaults, models, and updates.
         </p>
       </header>
 
-      {/* Appearance */}
-      <section className="space-y-4" aria-labelledby="appearance-heading">
-        <SectionHeader
-          id="appearance-heading"
-          icon={<Palette className="size-5" weight="duotone" />}
-          eyebrow="Appearance"
-          title="Theme"
-          description="Choose light, dark, or follow the system."
-        />
+      {/* ── Appearance ── */}
+      <Section
+        id="appearance-heading"
+        icon={<Palette className="size-4" weight="duotone" />}
+        eyebrow="Appearance"
+        title="Theme"
+        description="Choose light, dark, or follow your system preference."
+        index={0}
+      >
         <RadioGroup
           value={theme}
           onValueChange={(v) => applyThemePreference(v as Theme, setTheme)}
-          className="grid gap-3 sm:grid-cols-3"
+          className="grid gap-2 sm:grid-cols-3"
           aria-label="Color theme"
         >
-          <ThemeOption
-            value="light"
-            label="Light"
-            description="Soft paper with cyan accent."
-            current={theme}
-            onSelect={(v) => applyThemePreference(v, setTheme)}
-          />
-          <ThemeOption
-            value="dark"
-            label="Dark"
-            description="Deep cool surface, low glare."
-            current={theme}
-            onSelect={(v) => applyThemePreference(v, setTheme)}
-          />
-          <ThemeOption
-            value="system"
-            label="System"
-            description="Follow your OS preference."
-            current={theme}
-            onSelect={(v) => applyThemePreference(v, setTheme)}
-          />
+          <ThemeOption value="light" label="Light" description="Soft paper with cyan accent." current={theme} />
+          <ThemeOption value="dark" label="Dark" description="Deep cool surface, low glare." current={theme} />
+          <ThemeOption value="system" label="System" description="Follow your OS preference." current={theme} />
         </RadioGroup>
-      </section>
+      </Section>
 
-      {/* Captions */}
-      <section className="space-y-4" aria-labelledby="captions-heading">
-        <SectionHeader
-          icon={<PaintBrush className="size-5" weight="duotone" />}
-          eyebrow="Captions"
-          title="Caption overlay defaults"
-          description="Defaults for typography and positioning. Per-project overrides live in the editor."
-        />
-        <div className="border-l-2 border-border pl-4">
-          <CaptionAppearanceSection />
-        </div>
-      </section>
+      {/* ── Captions ── */}
+      <Section
+        icon={<PaintBrush className="size-4" weight="duotone" />}
+        eyebrow="Captions"
+        title="Caption overlay defaults"
+        description="Global defaults for typography and positioning. Projects can override these."
+        index={1}
+      >
+        <CaptionAppearanceSection />
+      </Section>
 
-      {/* Translation defaults */}
-      <section className="space-y-4" aria-labelledby="defaults-heading">
-        <SectionHeader
-          id="defaults-heading"
-          icon={<Translate className="size-5" weight="duotone" />}
-          eyebrow="Translation"
-          title="Translation defaults"
-          description="Provider and language defaults for new projects."
-        />
+      {/* ── Translation defaults ── */}
+      <Section
+        id="defaults-heading"
+        icon={<Translate className="size-4" weight="duotone" />}
+        eyebrow="Translation"
+        title="Translation defaults"
+        description="Provider and language defaults applied when opening the editor."
+        index={2}
+      >
         {!hydrated ? (
-          <p className="text-sm text-muted-foreground">Loading settings…</p>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-8 bg-muted/30 shimmer" />
+            ))}
+          </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 border-l-2 border-border pl-4">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-5"
+            >
               <FormField
                 control={form.control}
                 name="defaultTranslatorProvider"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Default translator provider</FormLabel>
+                    <FormLabel className="text-xs">Default provider</FormLabel>
                     <FormControl>
-                      <Input {...field} autoComplete="off" placeholder="nllb" />
+                      <Input
+                        {...field}
+                        autoComplete="off"
+                        placeholder="google"
+                        className="font-mono text-xs"
+                      />
                     </FormControl>
-                    <FormDescription>
-                      Examples: google, deepseek, nllb, azure. Google works without an API key; DeepSeek
-                      requires an API key under Models and keys.
+                    <FormDescription className="text-[0.65rem]">
+                      google · deepseek · nllb · azure. Google works without an API key.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -262,9 +276,9 @@ export const SettingsPage = () => {
                   name="defaultSourceLang"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Default source language</FormLabel>
+                      <FormLabel className="text-xs">Source language</FormLabel>
                       <FormControl>
-                        <Input {...field} autoComplete="off" placeholder="auto" />
+                        <Input {...field} autoComplete="off" placeholder="auto" className="font-mono text-xs" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -275,9 +289,9 @@ export const SettingsPage = () => {
                   name="defaultTargetLang"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Default target language</FormLabel>
+                      <FormLabel className="text-xs">Target language</FormLabel>
                       <FormControl>
-                        <Input {...field} autoComplete="off" placeholder="mn" />
+                        <Input {...field} autoComplete="off" placeholder="mn" className="font-mono text-xs" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -289,66 +303,81 @@ export const SettingsPage = () => {
                 name="modelsDirOverride"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Models directory override</FormLabel>
+                    <FormLabel className="text-xs">Models directory override</FormLabel>
                     <FormControl>
-                      <Input {...field} autoComplete="off" placeholder="Leave empty for default" />
+                      <Input
+                        {...field}
+                        autoComplete="off"
+                        placeholder="Leave empty for app default"
+                        className="font-mono text-xs"
+                      />
                     </FormControl>
-                    <FormDescription>
-                      Optional absolute path. Clear the field to use the app default.
+                    <FormDescription className="text-[0.65rem]">
+                      Absolute path. Clear to use the default app data directory.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" variant="default">
+              <Button type="submit" variant="default" size="sm">
                 Save preferences
               </Button>
             </form>
           </Form>
         )}
-      </section>
+      </Section>
 
-      {/* Updates */}
-      <section className="space-y-4" aria-labelledby="updates-heading">
-        <SectionHeader
-          id="updates-heading"
-          icon={<Download className="size-5" weight="duotone" />}
-          eyebrow="Updates"
-          title="App updates"
-          description="Check for signed releases from GitHub."
-        />
-        <div className="border-l-2 border-border pl-4">
-          <UpdatesSection />
-        </div>
-      </section>
+      {/* ── Updates ── */}
+      <Section
+        id="updates-heading"
+        icon={<Download className="size-4" weight="duotone" />}
+        eyebrow="Updates"
+        title="App updates"
+        description="Signed releases from GitHub Releases."
+        index={3}
+      >
+        <UpdatesSection />
+      </Section>
 
-      {/* Models & keys */}
-      <section className="space-y-4" aria-labelledby="models-keys-heading">
-        <SectionHeader
-          id="models-keys-heading"
-          icon={<Cloud className="size-5" weight="duotone" />}
-          eyebrow="Models · API keys"
-          title="Local models and cloud keys"
-          description="Whisper GGML weights, NLLB translation bundles, and provider API keys."
-        />
-        <div className="border-l-2 border-border pl-4">
-          <ModelsAndKeysPanel />
-        </div>
-      </section>
+      {/* ── Models & keys ── */}
+      <Section
+        id="models-keys-heading"
+        icon={<Cloud className="size-4" weight="duotone" />}
+        eyebrow="Models · API keys"
+        title="Local models and cloud keys"
+        description="Whisper GGML weights, NLLB translation bundles, and provider API keys."
+        index={4}
+      >
+        <ModelsAndKeysPanel />
+      </Section>
 
-      {/* Developer */}
-      <section className="space-y-4" aria-labelledby="dev-heading">
-        <SectionHeader
-          id="dev-heading"
-          icon={<Code className="size-5" weight="duotone" />}
-          eyebrow="Developer"
-          title="Smoke tools"
-          description="Direct Rust integration calls. For debugging only."
-        />
-        <div className="border-l-2 border-border pl-4">
-          <DeveloperToolsPanel />
+      {/* ── Developer ── */}
+      <Section
+        id="dev-heading"
+        icon={<Code className="size-4" weight="duotone" />}
+        eyebrow="Developer"
+        title="Developer options"
+        description="Enable to reveal low-level debugging tools."
+        index={5}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-foreground">Developer mode</p>
+            <p className="text-[0.65rem] text-muted-foreground/70">Show smoke tools and Rust integration calls.</p>
+          </div>
+          <Switch
+            checked={developerMode}
+            onCheckedChange={setDeveloperMode}
+            aria-label="Toggle developer mode"
+          />
         </div>
-      </section>
+        {developerMode && (
+          <div className="mt-4 space-y-4 border-t border-border/40 pt-4">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-signal/70">Smoke tools</p>
+            <DeveloperToolsPanel />
+          </div>
+        )}
+      </Section>
     </div>
   )
 }

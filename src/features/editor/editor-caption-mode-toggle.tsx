@@ -4,31 +4,46 @@ import {
   CAPTION_TEXT_MODE_OPTIONS,
   type CaptionTextMode,
 } from "@/features/editor/caption-text-mode"
+import { cn } from "@/lib/utils"
 
 type EditorCaptionModeToggleProps = {
   value: CaptionTextMode
   onChange: (next: CaptionTextMode) => void
 }
 
-/** Inline selector that controls which caption track is rendered on the video overlay. */
 export const EditorCaptionModeToggle = ({
   value,
   onChange,
 }: EditorCaptionModeToggleProps) => (
-  <label className="flex flex-wrap items-center gap-2 border border-border bg-card/40 px-3 py-2 text-xs">
-    <TextAa className="size-4 shrink-0 text-signal" weight="duotone" aria-hidden />
-    <span className="font-medium text-foreground">On-video caption</span>
-    <select
-      className="ml-auto h-7 border border-input bg-background px-2 font-mono text-xs text-foreground transition-colors hover:border-foreground/40 focus:border-signal focus:outline-none"
-      value={value}
-      onChange={(e) => onChange(e.target.value as CaptionTextMode)}
-      aria-label="Caption text shown on video"
+  <div className={cn(
+    "flex items-center justify-between gap-2",
+    "border border-border/50 bg-card/20 px-3 py-1.5",
+    "transition-colors hover:bg-card/30",
+  )}>
+    <label
+      className="flex items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70"
+      htmlFor="caption-mode-select"
     >
+      <TextAa className="size-3.5 shrink-0 text-signal/70" weight="duotone" aria-hidden />
+      Caption overlay
+    </label>
+    <div className="flex items-center border border-border/50 bg-background/50 overflow-hidden">
       {CAPTION_TEXT_MODE_OPTIONS.map((opt) => (
-        <option key={opt.value} value={opt.value}>
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            "h-6 px-2.5 font-mono text-[0.6rem] font-medium transition-all duration-150",
+            value === opt.value
+              ? "bg-signal text-signal-foreground"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+          aria-pressed={value === opt.value}
+        >
           {opt.label}
-        </option>
+        </button>
       ))}
-    </select>
-  </label>
+    </div>
+  </div>
 )

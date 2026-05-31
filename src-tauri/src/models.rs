@@ -150,6 +150,18 @@ pub fn bundle_for(kind: ModelKind, id: &str) -> Option<&'static ModelBundle> {
 }
 
 pub fn models_root_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    use tauri_plugin_store::StoreExt;
+    if let Ok(store) = app.store("settings.json") {
+        if let Some(val) = store.get("modelsDirOverride") {
+            if let Some(s) = val.as_str().filter(|s| !s.trim().is_empty()) {
+                let p = PathBuf::from(s);
+                if p.is_absolute() {
+                    std::fs::create_dir_all(&p).map_err(|e| e.to_string())?;
+                    return Ok(p);
+                }
+            }
+        }
+    }
     let base = app
         .path()
         .app_data_dir()

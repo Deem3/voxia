@@ -40,6 +40,7 @@ type SettingsState = {
   captionBackgroundColor: string
   captionBackgroundOpacity: number
   captionTextMode: CaptionTextMode
+  developerMode: boolean
   hydrated: boolean
   hydrate: () => Promise<void>
   persist: () => Promise<void>
@@ -55,6 +56,7 @@ type SettingsState = {
   setCaptionBackgroundColor: (s: string) => void
   setCaptionBackgroundOpacity: (n: number) => void
   setCaptionTextMode: (mode: CaptionTextMode) => void
+  setDeveloperMode: (on: boolean) => void
   addRecentProject: (projectPath: string) => void
   removeRecentProject: (projectPath: string) => void
 }
@@ -76,6 +78,7 @@ const defaults = {
   captionBackgroundColor: DEFAULT_CAPTION_BACKGROUND_COLOR,
   captionBackgroundOpacity: DEFAULT_CAPTION_BACKGROUND_OPACITY,
   captionTextMode: "original" as CaptionTextMode,
+  developerMode: false,
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -137,6 +140,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         ? clampCaptionBackgroundOpacity(bgOpRaw)
         : DEFAULT_CAPTION_BACKGROUND_OPACITY
     const captionTextMode = parseCaptionTextMode(await store.get("captionTextMode"))
+    const developerMode = (await store.get<boolean>("developerMode")) ?? defaults.developerMode
 
     set({
       theme,
@@ -153,6 +157,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       captionBackgroundColor,
       captionBackgroundOpacity,
       captionTextMode,
+      developerMode,
       hydrated: true,
     })
   },
@@ -173,6 +178,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await store.set("captionBackgroundColor", s.captionBackgroundColor)
     await store.set("captionBackgroundOpacity", s.captionBackgroundOpacity)
     await store.set("captionTextMode", s.captionTextMode)
+    await store.set("developerMode", s.developerMode)
     await store.save()
   },
   setTheme: (t) => {
@@ -226,6 +232,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
   setCaptionTextMode: (mode) => {
     set({ captionTextMode: parseCaptionTextMode(mode) })
+    void get().persist()
+  },
+  setDeveloperMode: (on) => {
+    set({ developerMode: on })
     void get().persist()
   },
   addRecentProject: (projectPath) => {

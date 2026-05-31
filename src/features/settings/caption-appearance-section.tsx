@@ -14,6 +14,7 @@ import type { CaptionColors } from "@/lib/caption-colors"
 import { useSettingsStore } from "@/store/useSettingsStore"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
+import { cn } from "@/lib/utils"
 
 export const CaptionAppearanceSection = () => {
   const hydrated = useSettingsStore((s) => s.hydrated)
@@ -34,12 +35,7 @@ export const CaptionAppearanceSection = () => {
   const setCaptionBackgroundOpacity = useSettingsStore((s) => s.setCaptionBackgroundOpacity)
   const boundsRef = useRef<HTMLDivElement>(null)
 
-  if (!hydrated) {
-    return <p className="text-sm text-muted-foreground">Loading caption settings…</p>
-  }
-
-  const position = { xPercent: captionPositionXPercent, yPercent: captionPositionYPercent }
-
+  // useMemo must be called before any conditional return (Rules of Hooks)
   const captionColors: CaptionColors = useMemo(
     () => ({
       textColor: captionTextColor,
@@ -48,6 +44,18 @@ export const CaptionAppearanceSection = () => {
     }),
     [captionTextColor, captionBackgroundColor, captionBackgroundOpacity],
   )
+
+  if (!hydrated) {
+    return (
+      <div className="space-y-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-8 bg-muted/20 shimmer" />
+        ))}
+      </div>
+    )
+  }
+
+  const position = { xPercent: captionPositionXPercent, yPercent: captionPositionYPercent }
 
   const handlePositionX = (v: number[]) => {
     const n = v[0]
@@ -62,14 +70,9 @@ export const CaptionAppearanceSection = () => {
   }
 
   return (
-    <section className="space-y-4" aria-labelledby="captions-heading">
-      <h2 id="captions-heading" className="text-lg font-medium text-foreground">
-        Caption overlay
-      </h2>
-      <p className="text-sm text-muted-foreground">
-        Defaults for typography and where captions sit on the video in the editor. Drag the preview block or use the
-        sliders; per-project overrides can still be set in the editor.
-      </p>
+    <section className="space-y-5" aria-labelledby="captions-heading">
+      <h3 id="captions-heading" className="sr-only">Caption overlay</h3>
+
       <CaptionFontFields
         idPrefix="settings"
         fontSizePx={captionFontSizePx}
@@ -77,13 +80,25 @@ export const CaptionAppearanceSection = () => {
         onFontSizeChange={setCaptionFontSizePx}
         onFontFamilyChange={setCaptionFontFamily}
       />
-      <label className="grid max-w-xs gap-1 text-xs">
-        <span className="font-medium text-foreground">Default caption text</span>
+
+      {/* Caption text mode */}
+      <div className="grid gap-1.5">
+        <label
+          htmlFor="settings-caption-mode"
+          className="text-xs font-semibold text-foreground/80"
+        >
+          Default caption display
+        </label>
         <select
-          className="h-9 border border-input bg-background px-2 font-mono text-xs"
+          id="settings-caption-mode"
+          className={cn(
+            "h-8 max-w-xs border border-input bg-background/80 px-2",
+            "font-mono text-xs text-foreground",
+            "transition-colors hover:border-signal/40 focus:border-signal focus:outline-none",
+          )}
           value={captionTextMode}
           onChange={(e) => setCaptionTextMode(e.target.value as CaptionTextMode)}
-          aria-label="Default caption text on video"
+          aria-label="Caption text on video"
         >
           {CAPTION_TEXT_MODE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -91,10 +106,11 @@ export const CaptionAppearanceSection = () => {
             </option>
           ))}
         </select>
-        <span className="text-muted-foreground">
-          Transcribed, translated, or both lines on the video overlay.
-        </span>
-      </label>
+        <p className="text-[0.65rem] text-muted-foreground/60">
+          Transcribed, translated, or both on the video overlay.
+        </p>
+      </div>
+
       <CaptionColorFields
         idPrefix="settings"
         colors={captionColors}
@@ -102,10 +118,12 @@ export const CaptionAppearanceSection = () => {
         onBackgroundColorChange={setCaptionBackgroundColor}
         onBackgroundOpacityChange={setCaptionBackgroundOpacity}
       />
-      <div className="grid gap-3 sm:grid-cols-2">
+
+      {/* Position sliders */}
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="settings-caption-x" className="text-xs">
-            Horizontal position ({Math.round(captionPositionXPercent)}%)
+            Horizontal <span className="font-mono text-signal/70">{Math.round(captionPositionXPercent)}%</span>
           </Label>
           <Slider
             id="settings-caption-x"
@@ -114,12 +132,12 @@ export const CaptionAppearanceSection = () => {
             max={95}
             step={1}
             onValueChange={handlePositionX}
-            aria-label="Caption horizontal position percent"
+            aria-label="Caption horizontal position"
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="settings-caption-y" className="text-xs">
-            Vertical position ({Math.round(captionPositionYPercent)}%)
+            Vertical <span className="font-mono text-signal/70">{Math.round(captionPositionYPercent)}%</span>
           </Label>
           <Slider
             id="settings-caption-y"
@@ -128,17 +146,33 @@ export const CaptionAppearanceSection = () => {
             max={95}
             step={1}
             onValueChange={handlePositionY}
-            aria-label="Caption vertical position percent"
+            aria-label="Caption vertical position"
           />
         </div>
       </div>
+
+      {/* Preview */}
       <div>
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Live preview</p>
+        <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
+          Preview
+        </p>
         <div
           ref={boundsRef}
-          className="relative aspect-video max-h-48 w-full max-w-md overflow-hidden border border-border bg-black"
+          className="relative aspect-video max-h-40 w-full max-w-sm overflow-hidden border border-border/50 bg-black"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-black" aria-hidden />
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-zinc-800/80 to-black"
+            aria-hidden
+          />
+          {/* Scanline effect */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(255,255,255,0.5) 1px, rgba(255,255,255,0.5) 2px)",
+              backgroundSize: "100% 3px",
+            }}
+            aria-hidden
+          />
           <CaptionOverlay
             cues={[]}
             currentTimeMs={0}
@@ -153,6 +187,9 @@ export const CaptionAppearanceSection = () => {
             onPositionChange={setCaptionPosition}
           />
         </div>
+        <p className="mt-1.5 text-[0.6rem] text-muted-foreground/50">
+          Drag the caption block to adjust position.
+        </p>
       </div>
     </section>
   )
