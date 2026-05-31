@@ -160,7 +160,7 @@ pub fn transcribe_f32_samples(
     _model_path: &std::path::Path,
     _samples: &[f32],
     _language: Option<&str>,
-    _cancel: &tokio_util::sync::CancellationToken,
+    _cancel: tokio_util::sync::CancellationToken,
     _on_progress: impl Fn(i32) + Send + Sync + 'static,
 ) -> Result<Vec<Cue>, String> {
     Err("Whisper ASR is not included in this build (Cargo was built with --no-default-features). Rebuild with default features, e.g. `cargo build -p voxia` or `bun run tauri build`.".into())

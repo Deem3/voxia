@@ -39,23 +39,30 @@ export const EditorCaptionTrackingPanel = ({
   return (
     <aside
       className={cn(
-        "flex w-full shrink-0 flex-col overflow-hidden rounded-none border border-border bg-card/40 lg:w-[min(100%,20rem)]",
+        "flex w-full shrink-0 flex-col overflow-hidden",
+        "border border-border/60 bg-card/25",
+        "lg:w-[min(100%,19rem)]",
         panelStyle == null && "max-h-[min(50vh,28rem)] lg:max-h-[min(70vh,42rem)]",
       )}
       style={panelStyle}
-      aria-label="Caption tracking beside video"
+      aria-label="Caption tracking panel"
     >
-      <header className="shrink-0 border-b border-border bg-card/60 px-3 py-2.5">
-        <p className="flex items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-foreground">
-          <span className="inline-flex h-1 w-3 bg-signal" aria-hidden />
+      {/* Panel header */}
+      <header className={cn(
+        "shrink-0 px-3 py-2 border-b border-border/50",
+        "bg-gradient-to-b from-muted/30 to-transparent",
+      )}>
+        <p className="flex items-center gap-2 text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-foreground/70">
+          <span className="inline-block h-[2px] w-3 rounded-full bg-signal" aria-hidden />
           Caption tracking
         </p>
-        <p className="mt-1 truncate text-[0.65rem] text-muted-foreground">
+        <p className="mt-0.5 truncate text-[0.6rem] text-muted-foreground/55">
           {cues.length === 0
-            ? "Transcribe to see lines here"
+            ? "Transcribe to see cues"
             : `${cues.length} cue${cues.length === 1 ? "" : "s"} · follows playback · click to seek`}
         </p>
       </header>
+
       <EditorCueRail
         cues={cues}
         bilingual={bilingual}

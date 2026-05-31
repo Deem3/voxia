@@ -255,7 +255,6 @@ export const EditorPage = () => {
             displayCaptionPosition={captionControlDisplay.captionPosition}
             displayCaptionColors={captionControlDisplay.captionColors}
             defaultFontSizePx={settingsCaptionFontSizePx}
-            defaultFontFamily={settingsCaptionFontFamily}
             defaultCaptionPosition={settingsCaptionPosition}
             defaultCaptionColors={settingsCaptionColors}
             hasProjectOverride={captionControlDisplay.hasProjectOverride}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { formatBytes } from "@/lib/format-bytes"
 import { formatMutationError } from "@/lib/format-mutation-error"
+import { cn } from "@/lib/utils"
 import type { ModelRow } from "@/types/voxia"
 
 type EditorTranscribePanelProps = {
@@ -25,7 +26,6 @@ type EditorTranscribePanelProps = {
   onCancel: () => void
 }
 
-/** Self-contained Transcribe panel: model picker, language input, run/cancel buttons, and live progress. */
 export const EditorTranscribePanel = ({
   installedModels,
   modelId,
@@ -46,89 +46,134 @@ export const EditorTranscribePanel = ({
   return (
     <section
       aria-label="Transcribe with Whisper"
-      className="border border-border bg-card/40"
+      className={cn(
+        "overflow-hidden border border-border/60 bg-card/30",
+        "transition-all duration-200",
+        isPending && "border-signal/20 bg-signal-muted/30",
+      )}
     >
-      <header className="flex items-center gap-2 border-b border-border px-3 py-2">
+      {/* Header */}
+      <header className="panel-header">
         <span
-          className="inline-flex size-6 items-center justify-center bg-signal-muted text-signal"
+          className={cn(
+            "inline-flex size-5 items-center justify-center",
+            "bg-signal-muted text-signal transition-all duration-200",
+            isPending && "signal-glow-sm",
+          )}
           aria-hidden
         >
-          <Microphone className="size-3.5" weight="fill" />
+          <Microphone
+            className={cn("size-3", isPending && "animate-pulse")}
+            weight="fill"
+          />
         </span>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-foreground/80">
           Transcribe
         </p>
-        <span className="ml-auto font-mono text-[0.6rem] text-muted-foreground">
-          Whisper · local
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          {isPending && (
+            <span className="flex items-center gap-1.5 text-[0.6rem] font-medium text-signal animate-fade-in">
+              <span
+                className="size-1.5 rounded-full bg-signal dot-pulse"
+                aria-hidden
+              />
+              Running
+            </span>
+          )}
+          <span className="font-mono text-[0.58rem] text-muted-foreground/60">
+            Whisper · local
+          </span>
+        </div>
       </header>
 
-      <div className="flex flex-wrap items-end gap-2 p-3">
-        <label className="grid gap-1 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+      {/* Controls */}
+      <div className="flex flex-wrap items-end gap-2.5 p-3">
+        <label className="grid gap-1 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-muted-foreground/70">
           Model
           <select
-            className="h-8 min-w-[180px] border border-input bg-background px-2 font-mono text-xs transition-colors hover:border-foreground/40 focus:border-signal focus:outline-none disabled:opacity-50"
+            className={cn(
+              "h-8 min-w-[180px] border border-input bg-background/80 px-2",
+              "font-mono text-xs text-foreground",
+              "transition-colors hover:border-signal/40 focus:border-signal focus:outline-none",
+              "disabled:opacity-40",
+            )}
             value={modelId}
             onChange={(e) => onModelIdChange(e.target.value)}
-            disabled={!hasWhisper}
-            aria-label="Whisper model (installed only)"
+            disabled={!hasWhisper || isPending}
+            aria-label="Whisper model"
           >
             {!hasWhisper ? (
               <option value="">No model installed</option>
             ) : (
               installedModels.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.displayName} ({m.id})
+                  {m.displayName}
                 </option>
               ))
             )}
           </select>
         </label>
 
-        <label className="grid min-w-[140px] flex-1 gap-1 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+        <label className="grid min-w-[120px] flex-1 gap-1 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-muted-foreground/70">
           Language
           <input
-            className="h-8 border border-input bg-background px-2 font-mono text-xs transition-colors hover:border-foreground/40 focus:border-signal focus:outline-none"
+            className={cn(
+              "h-8 border border-input bg-background/80 px-2",
+              "font-mono text-xs text-foreground placeholder:text-muted-foreground/40",
+              "transition-colors hover:border-signal/40 focus:border-signal focus:outline-none",
+            )}
             placeholder="auto"
             value={language}
             onChange={(e) => onLanguageChange(e.target.value)}
+            disabled={isPending}
             aria-label="Whisper language code"
           />
         </label>
 
-        <Button
-          type="button"
-          size="default"
-          disabled={!hasWhisper || isPending}
-          onClick={onRun}
-          title="Run Whisper transcription on this video"
-        >
-          <Microphone className="size-4 shrink-0" weight="duotone" aria-hidden />
-          {isPending ? "Transcribing…" : "Run transcription"}
-        </Button>
-
-        {isPending && taskId ? (
+        <div className="flex items-center gap-1.5">
           <Button
             type="button"
             size="default"
-            variant="outline"
-            onClick={onCancel}
-            title="Cancel transcription"
+            variant={isPending ? "secondary" : "default"}
+            disabled={!hasWhisper || isPending}
+            onClick={onRun}
+            title="Run Whisper transcription"
+            className="gap-1.5"
           >
-            <X className="size-4 shrink-0" weight="bold" aria-hidden />
-            Cancel
+            <Microphone className="size-3.5 shrink-0" weight="duotone" aria-hidden />
+            {isPending ? "Transcribing…" : "Run transcription"}
           </Button>
-        ) : null}
+
+          {isPending && taskId ? (
+            <Button
+              type="button"
+              size="default"
+              variant="outline"
+              onClick={onCancel}
+              title="Cancel"
+              className="gap-1.5 animate-fade-in"
+            >
+              <X className="size-3.5 shrink-0" weight="bold" aria-hidden />
+              Cancel
+            </Button>
+          ) : null}
+        </div>
       </div>
 
+      {/* No model warning */}
       {!hasWhisper ? (
-        <p className="border-t border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-          No Whisper model installed. Download{" "}
-          <span className="font-mono">tiny</span> or{" "}
-          <span className="font-mono">base</span> in Settings → Models.
-        </p>
+        <div className="border-t border-destructive/20 bg-destructive/5 px-3 py-2 animate-status-in">
+          <p className="text-xs text-destructive/90">
+            No Whisper model installed.{" "}
+            <span className="font-medium">
+              Download <code className="font-mono">tiny</code> or{" "}
+              <code className="font-mono">base</code> in Settings → Models.
+            </span>
+          </p>
+        </div>
       ) : null}
 
+      {/* Progress */}
       {isPending ? (
         <TranscribeProgressView
           whisperPercent={whisperPercent}
@@ -136,15 +181,16 @@ export const EditorTranscribePanel = ({
         />
       ) : null}
 
+      {/* Error */}
       {isError ? (
         <div
           role="alert"
-          className="border-t border-destructive/40 bg-destructive/10 px-3 py-2"
+          className="border-t border-destructive/30 bg-destructive/8 px-3 py-2.5 animate-status-in"
         >
-          <p className="text-xs font-medium text-destructive">
+          <p className="text-[0.65rem] font-semibold text-destructive">
             Transcription failed
           </p>
-          <p className="mt-1 whitespace-pre-wrap break-words font-mono text-[0.65rem] text-foreground/90">
+          <p className="mt-1 whitespace-pre-wrap break-words font-mono text-[0.6rem] text-foreground/80">
             {formatMutationError(error)}
           </p>
         </div>
@@ -160,33 +206,43 @@ const TranscribeProgressView = ({
   whisperPercent: number | null
   pcmBytes: number | null
 }) => (
-  <div className="space-y-2 border-t border-border bg-muted/30 px-3 py-2">
+  <div className="space-y-2.5 border-t border-signal/15 bg-signal-muted/20 px-3 py-2.5">
     {whisperPercent === null ? (
-      pcmBytes !== null ? (
-        <p className="font-mono text-[0.65rem] text-muted-foreground">
-          <span className="mr-2 inline-block animate-pulse text-signal">●</span>
-          Extracting audio (ffmpeg): {formatBytes(pcmBytes)} PCM
+      <div className="flex items-center gap-2.5 animate-fade-in">
+        <span
+          className={cn(
+            "inline-flex size-4 items-center justify-center",
+            "rounded-full border-2 border-signal/60 border-t-signal",
+          )}
+          style={{ animation: "v-orbit 0.8s linear infinite" }}
+          aria-hidden
+        />
+        <p className="font-mono text-[0.6rem] text-muted-foreground">
+          {pcmBytes !== null
+            ? <>Extracting audio · <span className="text-signal font-medium">{formatBytes(pcmBytes)}</span> PCM decoded</>
+            : "Extracting audio via ffmpeg…"
+          }
         </p>
-      ) : (
-        <p className="font-mono text-[0.65rem] text-muted-foreground">
-          <span className="mr-2 inline-block animate-pulse text-signal">●</span>
-          Extracting audio (ffmpeg)… long files take a moment.
-        </p>
-      )
+      </div>
     ) : null}
+
     {whisperPercent !== null ? (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 animate-fade-in">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-mono text-[0.65rem] text-muted-foreground">
-            Whisper transcription
+          <span className="flex items-center gap-1.5 font-mono text-[0.6rem] text-muted-foreground">
+            <span
+              className="size-1.5 rounded-full bg-signal dot-pulse"
+              aria-hidden
+            />
+            Whisper inference
           </span>
-          <span className="font-mono text-[0.65rem] font-semibold text-foreground">
+          <span className="font-mono text-[0.6rem] font-semibold text-signal tabular-nums">
             {whisperPercent}%
           </span>
         </div>
         <Progress
           value={whisperPercent}
-          aria-label={`Transcription progress ${whisperPercent}%`}
+          aria-label={`Transcription ${whisperPercent}%`}
         />
       </div>
     ) : null}

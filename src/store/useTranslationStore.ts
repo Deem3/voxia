@@ -10,7 +10,7 @@ type TranslationState = {
 }
 
 export const useTranslationStore = create<TranslationState>((set) => ({
-  provider: "nllb",
+  provider: "google",
   sourceLang: "auto",
   targetLang: "mn",
   setProvider: (p) => set({ provider: p }),

@@ -1,6 +1,13 @@
 "use client"
 
-import { ArrowClockwiseIcon as ArrowClockwise, DownloadSimpleIcon as DownloadSimple, TrashIcon as Trash } from "@phosphor-icons/react"
+import {
+  ArrowClockwiseIcon as ArrowClockwise,
+  CheckCircleIcon as CheckCircle,
+  DownloadSimpleIcon as DownloadSimple,
+  LockKeyIcon as LockKey,
+  TrashIcon as Trash,
+  WarningCircleIcon as WarningCircle,
+} from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
@@ -23,9 +30,10 @@ import {
   notifyTaskStarted,
   notifyTaskSucceeded,
 } from "@/lib/notifications"
-import type { ModelProgressPayload, ModelRow } from "@/types/voxia"
+import type { ModelProgressPayload, ModelRow as ModelRowData } from "@/types/voxia"
+import { cn } from "@/lib/utils"
 
-const formatBytes = (n: number) => {
+const fmtBytes = (n: number) => {
   if (n < 1024) return `${n} B`
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
   if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`
@@ -34,150 +42,232 @@ const formatBytes = (n: number) => {
 
 type BusyState = { kind: string; id: string; op: "download" | "delete" } | null
 
-const ModelTable = ({
-  rows,
+const ModelRow = ({
+  row,
   kind,
   busy,
   downloadProgress,
   onDownload,
   onDelete,
 }: {
-  rows: ModelRow[]
+  row: ModelRowData
   kind: string
   busy: BusyState
   downloadProgress: ModelProgressPayload | null
   onDownload: (id: string) => void
   onDelete: (id: string) => void
 }) => {
-  const isRowBusy = (id: string) => busy !== null && busy.kind === kind && busy.id === id
+  const isRowBusy = busy !== null && busy.kind === kind && busy.id === row.id
+  const isDownloading = busy?.op === "download" && isRowBusy
+  const isDeleting = busy?.op === "delete" && isRowBusy
 
-  const rowDownloadProgress = (id: string) => {
-    if (
-      busy?.op !== "download" ||
-      busy.kind !== kind ||
-      busy.id !== id ||
-      !downloadProgress ||
-      downloadProgress.kind !== kind ||
-      downloadProgress.id !== id
-    ) {
-      return null
-    }
-    return modelDownloadProgressView(downloadProgress)
-  }
+  const progress =
+    isDownloading && downloadProgress?.kind === kind && downloadProgress.id === row.id
+      ? modelDownloadProgressView(downloadProgress)
+      : isDownloading
+        ? { percent: 0, bytesReceived: 0, totalBytes: null, phaseLabel: "Starting…" }
+        : null
 
   return (
-    <div className="overflow-x-auto border border-border">
-      <table className="w-full text-left text-xs">
-        <thead className="border-b border-border bg-muted/40 font-medium text-muted-foreground">
-          <tr>
-            <th className="px-2 py-2">Model</th>
-            <th className="px-2 py-2">Id</th>
-            <th className="px-2 py-2">Status</th>
-            <th className="px-2 py-2">Size</th>
-            <th className="px-2 py-2 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            const isDownloading = busy?.op === "download" && isRowBusy(r.id)
-            const progress =
-              rowDownloadProgress(r.id) ??
-              (isDownloading
-                ? {
-                    percent: 0,
-                    bytesReceived: 0,
-                    totalBytes: null,
-                    phaseLabel: "Starting download…",
-                  }
-                : null)
+    <div className={cn(
+      "flex items-start gap-3 border border-border/50 bg-card/30 p-3 transition-all duration-150",
+      isDownloading && "border-signal/20 bg-signal-muted/20",
+    )}>
+      {/* Status icon */}
+      <div className={cn(
+        "mt-0.5 inline-flex size-6 shrink-0 items-center justify-center",
+        row.installed
+          ? "bg-emerald-500/10 text-emerald-500"
+          : row.hasPartialDownload
+            ? "bg-amber-500/10 text-amber-500"
+            : "bg-muted/30 text-muted-foreground/40",
+      )}>
+        {row.installed ? (
+          <CheckCircle className="size-3.5" weight="fill" aria-hidden />
+        ) : row.hasPartialDownload ? (
+          <WarningCircle className="size-3.5" weight="duotone" aria-hidden />
+        ) : (
+          <DownloadSimple className="size-3.5" weight="duotone" aria-hidden />
+        )}
+      </div>
 
-            return (
-              <tr key={r.id} className="border-b border-border last:border-0">
-              <td className="px-2 py-2 text-foreground">{r.displayName}</td>
-              <td className="px-2 py-2 font-mono text-muted-foreground">{r.id}</td>
-              <td className="px-2 py-2">
-                {progress ? (
-                  <div className="min-w-[10rem] max-w-xs space-y-1.5">
-                    <Progress value={progress.percent} aria-label={`Download ${progress.percent}%`} />
-                    <p className="text-[0.65rem] leading-snug text-muted-foreground">
-                      <span className="font-medium text-foreground">{progress.percent}%</span>
-                      {" · "}
-                      {formatBytes(progress.bytesReceived)}
-                      {progress.totalBytes != null
-                        ? ` / ${formatBytes(progress.totalBytes)}`
-                        : null}
-                    </p>
-                    <p className="text-[0.65rem] text-muted-foreground">{progress.phaseLabel}</p>
-                  </div>
-                ) : r.installed ? (
-                  <span className="text-emerald-600 dark:text-emerald-400">Installed</span>
-                ) : r.hasPartialDownload ? (
-                  <span className="text-amber-600 dark:text-amber-400">
-                    Partial ({formatBytes(r.bytesOnDisk)})
-                  </span>
-                ) : (
-                  "—"
-                )}
-              </td>
-              <td className="px-2 py-2 font-mono text-muted-foreground">
-                {formatBytes(r.bytesOnDisk)}
-                {r.hasPartialDownload && !r.installed ? (
-                  <span className="ml-1 text-[0.65rem] text-muted-foreground">(partial)</span>
-                ) : null}
-              </td>
-              <td className="px-2 py-2 text-right">
-                <div className="flex flex-wrap justify-end gap-1">
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="secondary"
-                    disabled={busy !== null}
-                    onClick={() => onDownload(r.id)}
-                    title={
-                      r.hasPartialDownload
-                        ? "Continue interrupted download"
-                        : r.installed
-                          ? "Download again"
-                          : "Download model"
-                    }
-                  >
-                    {r.hasPartialDownload ? (
-                      <ArrowClockwise className="size-3.5 shrink-0" weight="duotone" aria-hidden />
-                    ) : (
-                      <DownloadSimple className="size-3.5 shrink-0" weight="duotone" aria-hidden />
-                    )}
-                    {isDownloading
-                      ? "Downloading…"
-                      : r.installed
-                        ? "Re-download"
-                        : r.hasPartialDownload
-                          ? "Resume download"
-                          : "Download"}
-                  </Button>
-                  {r.installed || r.hasPartialDownload ? (
-                    <Button
-                      type="button"
-                      size="xs"
-                      variant="outline"
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      disabled={busy !== null}
-                      onClick={() => onDelete(r.id)}
-                      title="Remove downloaded and partial files"
-                    >
-                      <Trash className="size-3.5 shrink-0" weight="duotone" aria-hidden />
-                      {busy?.op === "delete" && isRowBusy(r.id) ? "Removing…" : "Delete"}
-                    </Button>
-                  ) : null}
-                </div>
-              </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      {/* Info */}
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-xs font-semibold text-foreground">{row.displayName}</span>
+          <span className="font-mono text-[0.6rem] text-muted-foreground/60">{row.id}</span>
+          {row.bytesOnDisk > 0 && (
+            <span className="font-mono text-[0.58rem] text-muted-foreground/50">
+              {fmtBytes(row.bytesOnDisk)}
+              {row.hasPartialDownload && !row.installed ? " (partial)" : ""}
+            </span>
+          )}
+        </div>
+
+        {/* Status line */}
+        {!progress && (
+          <p className={cn(
+            "text-[0.6rem] font-medium",
+            row.installed
+              ? "text-emerald-500/80"
+              : row.hasPartialDownload
+                ? "text-amber-500/80"
+                : "text-muted-foreground/50",
+          )}>
+            {row.installed
+              ? "Installed and ready"
+              : row.hasPartialDownload
+                ? "Partial download"
+                : "Not downloaded"}
+          </p>
+        )}
+
+        {/* Progress */}
+        {progress ? (
+          <div className="space-y-1 animate-fade-in">
+            <Progress value={progress.percent} aria-label={`Download ${progress.percent}%`} />
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[0.58rem] text-muted-foreground/70">
+                {progress.phaseLabel}
+              </span>
+              <span className="font-mono text-[0.58rem] font-semibold text-signal">
+                {progress.percent}%
+              </span>
+            </div>
+            {progress.totalBytes != null && (
+              <span className="font-mono text-[0.55rem] text-muted-foreground/50">
+                {fmtBytes(progress.bytesReceived)} / {fmtBytes(progress.totalBytes)}
+              </span>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Actions */}
+      <div className="flex shrink-0 items-center gap-1">
+        <Button
+          type="button"
+          size="xs"
+          variant="secondary"
+          disabled={busy !== null}
+          onClick={() => onDownload(row.id)}
+          title={
+            row.hasPartialDownload
+              ? "Resume download"
+              : row.installed
+                ? "Re-download"
+                : "Download"
+          }
+          className="gap-1"
+        >
+          {row.hasPartialDownload ? (
+            <ArrowClockwise className="size-3 shrink-0" weight="duotone" aria-hidden />
+          ) : (
+            <DownloadSimple className="size-3 shrink-0" weight="duotone" aria-hidden />
+          )}
+          {isDownloading
+            ? "…"
+            : row.installed
+              ? "Re-dl"
+              : row.hasPartialDownload
+                ? "Resume"
+                : "Download"}
+        </Button>
+
+        {(row.installed || row.hasPartialDownload) && (
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="ghost"
+            disabled={busy !== null}
+            onClick={() => onDelete(row.id)}
+            title="Delete"
+            className={cn(
+              "text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10",
+              isDeleting && "text-destructive animate-pulse",
+            )}
+          >
+            <Trash className="size-3" weight="duotone" aria-hidden />
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
+
+const KeySection = ({
+  title,
+  description,
+  stored,
+  placeholder,
+  value,
+  onChange,
+  onSave,
+  onClear,
+  saveLabel = "Save",
+}: {
+  title: string
+  description?: string
+  stored: boolean
+  placeholder: string
+  value: string
+  onChange: (v: string) => void
+  onSave: () => void
+  onClear: () => void
+  saveLabel?: string
+}) => (
+  <div className="space-y-2.5">
+    <div className="flex items-center gap-2">
+      <LockKey className="size-3.5 text-muted-foreground/60" weight="duotone" aria-hidden />
+      <p className="text-xs font-semibold text-foreground">{title}</p>
+      <span className={cn(
+        "ml-auto inline-flex items-center gap-1 px-1.5 py-0.5",
+        "text-[0.55rem] font-medium uppercase tracking-wide",
+        stored
+          ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          : "border border-border/40 bg-muted/20 text-muted-foreground/50",
+      )}>
+        <span className={cn(
+          "size-1.5 rounded-full",
+          stored ? "bg-emerald-500" : "bg-muted-foreground/30",
+        )} aria-hidden />
+        {stored ? "Stored" : "Not set"}
+      </span>
+    </div>
+    {description ? (
+      <p className="text-[0.65rem] text-muted-foreground/60">{description}</p>
+    ) : null}
+    <div className="flex gap-1.5">
+      <input
+        type="password"
+        className={cn(
+          "h-8 min-w-0 flex-1 border border-input bg-background/80 px-2",
+          "font-mono text-xs text-foreground placeholder:text-muted-foreground/40",
+          "transition-colors hover:border-signal/40 focus:border-signal focus:outline-none",
+        )}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <Button type="button" size="sm" variant="secondary" onClick={onSave} disabled={!value.trim()}>
+        {saveLabel}
+      </Button>
+      {stored && (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={onClear}
+          className="text-muted-foreground/60 hover:text-destructive"
+        >
+          Clear
+        </Button>
+      )}
+    </div>
+  </div>
+)
 
 export const ModelsAndKeysPanel = () => {
   const queryClient = useQueryClient()
@@ -200,14 +290,8 @@ export const ModelsAndKeysPanel = () => {
 
   useEffect(() => {
     let un: (() => void) | undefined
-    void listenModelProgress((p) => {
-      setDownloadProgress(p)
-    }).then((u) => {
-      un = u
-    })
-    return () => {
-      un?.()
-    }
+    void listenModelProgress((p) => setDownloadProgress(p)).then((u) => { un = u })
+    return () => { un?.() }
   }, [])
 
   const dl = useMutation({
@@ -215,18 +299,9 @@ export const ModelsAndKeysPanel = () => {
       setBusy({ kind, id, op: "download" })
       await downloadModel(kind, id)
     },
-    onMutate: ({ kind, id }) => {
-      void notifyTaskStarted("Downloading model", `${kind}/${id}`)
-    },
-    onSuccess: (_data, { kind, id }) => {
-      void notifyTaskSucceeded("Model downloaded", `${kind}/${id} is ready to use`)
-    },
-    onError: (error, { kind, id }) => {
-      void notifyTaskFailed(
-        "Model download failed",
-        `${kind}/${id}: ${formatNotifyError(error)}`,
-      )
-    },
+    onMutate: ({ kind, id }) => { void notifyTaskStarted("Downloading model", `${kind}/${id}`) },
+    onSuccess: (_data, { kind, id }) => { void notifyTaskSucceeded("Model downloaded", `${kind}/${id} ready`) },
+    onError: (error, { kind, id }) => { void notifyTaskFailed("Download failed", `${kind}/${id}: ${formatNotifyError(error)}`) },
     onSettled: () => {
       setBusy(null)
       setDownloadProgress(null)
@@ -245,196 +320,162 @@ export const ModelsAndKeysPanel = () => {
     },
   })
 
-  const handleDeleteModel = (kind: string, id: string, displayName: string) => {
-    const label = displayName || id
-    const ok = window.confirm(`Remove downloaded files for “${label}” (${id})? This cannot be undone.`)
-    if (!ok) return
+  const handleDelete = (kind: string, id: string, displayName: string) => {
+    if (!window.confirm(`Remove "${displayName || id}"? This cannot be undone.`)) return
     del.mutate({ kind, id })
   }
 
-  const handleSaveAzure = async () => {
-    if (!azureKey.trim()) return
-    await setProviderKey("azure", azureKey.trim())
-    if (azureRegion.trim()) {
-      await setProviderKey("azure_region", azureRegion.trim())
-    }
-    setAzureKey("")
-    setHasAzure(true)
-  }
-
-  const handleSaveGoogle = async () => {
-    if (!googleKey.trim()) return
-    await setProviderKey("google", googleKey.trim())
-    setGoogleKey("")
-    setHasGoogle(true)
-  }
-
-  const handleSaveDeepseek = async () => {
-    if (!deepseekKey.trim()) return
-    await setProviderKey("deepseek", deepseekKey.trim())
-    setDeepseekKey("")
-    setHasDeepseek(true)
-  }
-
   return (
-    <div className="space-y-10">
-      <section className="space-y-3" aria-labelledby="models-heading">
-        <h2 id="models-heading" className="text-lg font-medium text-foreground">
-          Models
-        </h2>
-        <p className="text-sm text-muted-foreground">Download Whisper GGML weights and NLLB translation bundles.</p>
+    <div className="space-y-8">
+      {/* Models */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold text-foreground/80">AI Models</h3>
+        <p className="text-[0.65rem] text-muted-foreground/60">
+          Download Whisper GGML weights for transcription and NLLB bundles for local translation.
+        </p>
         <Tabs defaultValue="whisper">
-          <TabsList aria-label="Model kind">
-            <TabsTrigger value="whisper">Whisper</TabsTrigger>
-            <TabsTrigger value="nllb">Translation (NLLB)</TabsTrigger>
+          <TabsList className="h-8 gap-px bg-muted/30 p-0.5">
+            <TabsTrigger value="whisper" className="text-xs h-7">Whisper ASR</TabsTrigger>
+            <TabsTrigger value="nllb" className="text-xs h-7">NLLB Translation</TabsTrigger>
           </TabsList>
-          <TabsContent value="whisper">
+          <TabsContent value="whisper" className="mt-3">
             {q.data ? (
-              <ModelTable
-                rows={q.data.whisper}
-                kind="whisper"
-                busy={busy}
-                downloadProgress={downloadProgress}
-                onDownload={(id) => dl.mutate({ kind: "whisper", id })}
-                onDelete={(id) => {
-                  const row = q.data?.whisper.find((r) => r.id === id)
-                  handleDeleteModel("whisper", id, row?.displayName ?? id)
-                }}
-              />
+              <div className="space-y-2">
+                {q.data.whisper.map((r) => (
+                  <ModelRow
+                    key={r.id}
+                    row={r}
+                    kind="whisper"
+                    busy={busy}
+                    downloadProgress={downloadProgress}
+                    onDownload={(id) => dl.mutate({ kind: "whisper", id })}
+                    onDelete={(id) => handleDelete("whisper", id, r.displayName)}
+                  />
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 bg-muted/20 shimmer" />
+                ))}
+              </div>
             )}
           </TabsContent>
-          <TabsContent value="nllb">
+          <TabsContent value="nllb" className="mt-3">
             {q.data ? (
-              <ModelTable
-                rows={q.data.nllb}
-                kind="nllb"
-                busy={busy}
-                downloadProgress={downloadProgress}
-                onDownload={(id) => dl.mutate({ kind: "nllb", id })}
-                onDelete={(id) => {
-                  const row = q.data?.nllb.find((r) => r.id === id)
-                  handleDeleteModel("nllb", id, row?.displayName ?? id)
-                }}
-              />
+              <div className="space-y-2">
+                {q.data.nllb.map((r) => (
+                  <ModelRow
+                    key={r.id}
+                    row={r}
+                    kind="nllb"
+                    busy={busy}
+                    downloadProgress={downloadProgress}
+                    onDownload={(id) => dl.mutate({ kind: "nllb", id })}
+                    onDelete={(id) => handleDelete("nllb", id, r.displayName)}
+                  />
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <div className="h-16 bg-muted/20 shimmer" />
             )}
           </TabsContent>
         </Tabs>
-        {dl.isError ? <p className="text-xs text-destructive">{String(dl.error)}</p> : null}
-        {del.isError ? <p className="text-xs text-destructive">{String(del.error)}</p> : null}
-      </section>
+        {dl.isError && (
+          <p className="text-[0.65rem] text-destructive animate-status-in">{String(dl.error)}</p>
+        )}
+        {del.isError && (
+          <p className="text-[0.65rem] text-destructive animate-status-in">{String(del.error)}</p>
+        )}
+      </div>
 
-      <section className="space-y-4" aria-labelledby="keys-heading">
-        <h2 id="keys-heading" className="text-lg font-medium text-foreground">
-          Cloud translation keys
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Keys are stored in the OS keyring, not in plugin-store. Only presence is shown here.
-        </p>
-        <div className="grid gap-6 border border-border bg-muted/10 p-4">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-foreground">Azure Translator</p>
-            <p className="text-xs text-muted-foreground">Stored: {hasAzure ? "yes" : "no"}</p>
+      {/* API Keys */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-xs font-semibold text-foreground/80">Cloud Translation Keys</h3>
+          <p className="mt-0.5 text-[0.65rem] text-muted-foreground/60">
+            Keys are stored in the OS keyring — never in plain text. Only key presence is shown here.
+          </p>
+        </div>
+        <div className="space-y-5 border border-border/40 bg-card/20 p-4">
+          <KeySection
+            title="Azure Translator"
+            placeholder="Ocp-Apim-Subscription-Key"
+            stored={hasAzure}
+            value={azureKey}
+            onChange={setAzureKey}
+            onSave={async () => {
+              if (!azureKey.trim()) return
+              await setProviderKey("azure", azureKey.trim())
+              if (azureRegion.trim()) await setProviderKey("azure_region", azureRegion.trim())
+              setAzureKey("")
+              setHasAzure(true)
+            }}
+            onClear={async () => {
+              await clearProviderKey("azure")
+              await clearProviderKey("azure_region")
+              setHasAzure(false)
+            }}
+            saveLabel="Save"
+          />
+          {/* Azure region sub-field */}
+          <div className="space-y-1 -mt-3 pl-5">
+            <label className="text-[0.58rem] font-medium uppercase tracking-[0.15em] text-muted-foreground/50">
+              Region (optional)
+            </label>
             <input
-              className="h-9 w-full border border-input bg-background px-2 font-mono text-xs"
-              placeholder="Ocp-Apim-Subscription-Key"
-              value={azureKey}
-              onChange={(e) => setAzureKey(e.target.value)}
-              autoComplete="off"
-              aria-label="Azure subscription key"
-            />
-            <input
-              className="h-9 w-full border border-input bg-background px-2 font-mono text-xs"
-              placeholder="Region (optional, e.g. eastus)"
+              className="h-7 w-full border border-input bg-background/60 px-2 font-mono text-xs placeholder:text-muted-foreground/30 focus:border-signal focus:outline-none"
+              placeholder="eastus"
               value={azureRegion}
               onChange={(e) => setAzureRegion(e.target.value)}
               autoComplete="off"
               aria-label="Azure region"
             />
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="secondary" onClick={handleSaveAzure}>
-                Save Azure key
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={async () => {
-                  await clearProviderKey("azure")
-                  await clearProviderKey("azure_region")
-                  setHasAzure(false)
-                }}
-              >
-                Clear
-              </Button>
-            </div>
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-foreground">Google Translate</p>
-            <p className="text-xs text-muted-foreground">
-              API key optional. Without a key, translation uses the free web endpoint. With a key,
-              uses Google Cloud Translation. Stored: {hasGoogle ? "yes" : "no"}
-            </p>
-            <input
-              className="h-9 w-full border border-input bg-background px-2 font-mono text-xs"
-              placeholder="API key"
+
+          <div className="border-t border-border/30 pt-4">
+            <KeySection
+              title="Google Translate"
+              description="Optional. Without a key, uses the free web endpoint. With a key, uses Google Cloud Translation v2."
+              placeholder="Google Cloud API key"
+              stored={hasGoogle}
               value={googleKey}
-              onChange={(e) => setGoogleKey(e.target.value)}
-              autoComplete="off"
-              aria-label="Google API key"
+              onChange={setGoogleKey}
+              onSave={async () => {
+                if (!googleKey.trim()) return
+                await setProviderKey("google", googleKey.trim())
+                setGoogleKey("")
+                setHasGoogle(true)
+              }}
+              onClear={async () => {
+                await clearProviderKey("google")
+                setHasGoogle(false)
+              }}
             />
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="secondary" onClick={handleSaveGoogle}>
-                Save Google key
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={async () => {
-                  await clearProviderKey("google")
-                  setHasGoogle(false)
-                }}
-              >
-                Clear
-              </Button>
-            </div>
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-foreground">DeepSeek</p>
-            <p className="text-xs text-muted-foreground">
-              API key required for the deepseek translation provider. Stored: {hasDeepseek ? "yes" : "no"}
-            </p>
-            <input
-              className="h-9 w-full border border-input bg-background px-2 font-mono text-xs"
-              placeholder="sk-..."
+
+          <div className="border-t border-border/30 pt-4">
+            <KeySection
+              title="DeepSeek"
+              description="Required for the DeepSeek translation provider."
+              placeholder="sk-…"
+              stored={hasDeepseek}
               value={deepseekKey}
-              onChange={(e) => setDeepseekKey(e.target.value)}
-              autoComplete="off"
-              aria-label="DeepSeek API key"
+              onChange={setDeepseekKey}
+              onSave={async () => {
+                if (!deepseekKey.trim()) return
+                await setProviderKey("deepseek", deepseekKey.trim())
+                setDeepseekKey("")
+                setHasDeepseek(true)
+              }}
+              onClear={async () => {
+                await clearProviderKey("deepseek")
+                setHasDeepseek(false)
+              }}
             />
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="secondary" onClick={handleSaveDeepseek}>
-                Save DeepSeek key
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={async () => {
-                  await clearProviderKey("deepseek")
-                  setHasDeepseek(false)
-                }}
-              >
-                Clear
-              </Button>
-            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
